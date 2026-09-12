@@ -25,8 +25,8 @@ export const StepWizard: React.FC<StepWizardProps> = ({
   }> = [
     {
       id: 'step1_spots',
-      label: 'Step 1: Ask AI & Places',
-      subLabel: 'Ranked by Check-ins (No Fake Ratings)',
+      label: 'Step 1: Ask Gemini & Places',
+      subLabel: 'Gemini AI Footfall Ranking (No Fake Ratings)',
       icon: Sparkles,
       number: 1,
       enabled: true
