@@ -145,7 +145,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
         {/* Glowing animated background orb */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-500/20 via-purple-500/15 to-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl">
+        <div className="relative z-10 max-w-4xl">
           
           {/* Google Gemini AI Model & Google Maps Badges */}
           <div className="flex flex-wrap items-center gap-2.5 mb-3">
@@ -238,20 +238,6 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
             ))}
           </div>
 
-        </div>
-
-        {/* Floating Gemini Badge Card */}
-        <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col items-center p-5 bg-gradient-to-b from-white/15 to-white/5 backdrop-blur-md rounded-2xl border border-white/20 text-center max-w-[220px] shadow-2xl">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 via-blue-500 to-emerald-400 text-white flex items-center justify-center mb-2.5 shadow-lg">
-            <Bot className="w-6 h-6" />
-          </div>
-          <div className="text-sm font-black text-white">Gemini 2.5 Flash</div>
-          <div className="text-[11px] text-indigo-200 mt-1 font-semibold">
-            Real Footfall Ranking
-          </div>
-          <div className="text-[10px] text-slate-300 mt-1 leading-tight">
-            100% immune to fake bot reviews. Ranks strictly by physical visits.
-          </div>
         </div>
       </div>
 
