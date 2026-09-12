@@ -123,7 +123,7 @@ export const WhyBetterShowcase: React.FC = () => {
         </div>
         
         <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">
-          Why TravelAI is <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">10x Better</span> Than Other Websites
+          Why TravelAI is <span className="bg-emerald-500 text-white px-2.5 py-0.5 rounded-lg mx-1 inline-block shadow-md">10x Better</span> Than Other Websites
         </h2>
         
         <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
