@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PersonaType, Navbar } from './components/Navbar';
 import { TouristSpot, Hotel, Guide, Restaurant, Booking, RoomType, GuidePackageType } from './types';
 import { INITIAL_TOURIST_SPOTS, INITIAL_HOTELS, INITIAL_GUIDES, INITIAL_RESTAURANTS } from './data/mockData';
@@ -10,9 +10,18 @@ import { LocalGuidePortal } from './components/guide/LocalGuidePortal';
 import { SplitPaymentSimulator } from './components/split/SplitPaymentSimulator';
 import { calculateSplitBreakdown } from './services/paymentSplitService';
 import { createBookingViaNodeAPI } from './services/apiClient';
+import { loadGoogleMapsScript } from './services/googleMapsService';
 
 export function App() {
   const [currentPersona, setCurrentPersona] = useState<PersonaType>('traveler');
+
+  // Load Google Maps API script on application mount
+  useEffect(() => {
+    loadGoogleMapsScript().catch((e) => {
+      console.warn('Google Maps script load note:', e);
+    });
+  }, []);
+
   const [spots, setSpots] = useState<TouristSpot[]>(INITIAL_TOURIST_SPOTS);
   const [hotels, setHotels] = useState<Hotel[]>(INITIAL_HOTELS);
   const [restaurants, setRestaurants] = useState<Restaurant[]>(INITIAL_RESTAURANTS);

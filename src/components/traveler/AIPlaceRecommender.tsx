@@ -16,9 +16,19 @@ import {
   Zap,
   Info,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  Key,
+  X,
+  Check
 } from 'lucide-react';
 import { askGeminiTouristRecommendations, GeminiTouristRecommendation } from '../../services/geminiService';
+import { 
+  getGoogleMapsApiKey, 
+  setGoogleMapsApiKey, 
+  getMaskedApiKey, 
+  isCustomGoogleMapsApiKey,
+  geocodeLocationWithGoogleMaps
+} from '../../services/googleMapsService';
 
 interface AIPlaceRecommenderProps {
   spots: TouristSpot[];
@@ -37,6 +47,13 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   const [selectedCity, setSelectedCity] = useState<string>('All');
   const [isGeminiThinking, setIsGeminiThinking] = useState<boolean>(false);
   const [geminiResult, setGeminiResult] = useState<GeminiTouristRecommendation | null>(null);
+
+  // Google Maps API Key Modal state
+  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
+  const [customKeyInput, setCustomKeyInput] = useState<string>(getGoogleMapsApiKey());
+  const [keySavedMessage, setKeySavedMessage] = useState<string>('');
+  const [testingKey, setTestingKey] = useState<boolean>(false);
+  const [testResult, setTestResult] = useState<string>('');
 
   const popularDestinations = [
     { name: 'Kochi', icon: '🌴', subtitle: 'Fort Kochi & Backwaters' },
@@ -130,10 +147,22 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
 
         <div className="relative z-10 max-w-3xl">
           
-          {/* Google Gemini AI Model Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-extrabold mb-3 shadow-sm">
-            <Bot className="w-4 h-4 text-indigo-400 animate-pulse" />
-            <span>Powered by Google Gemini 2.5 Flash &bull; Real Check-In Footfall Engine</span>
+          {/* Google Gemini AI Model & Google Maps Badges */}
+          <div className="flex flex-wrap items-center gap-2.5 mb-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-extrabold shadow-sm">
+              <Bot className="w-4 h-4 text-indigo-400 animate-pulse" />
+              <span>Powered by Google Gemini 2.5 Flash &bull; Real Check-In Footfall Engine</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowKeyModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-[1.02]"
+              title="Click to view or edit Google Maps API Key"
+            >
+              <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Google Maps API: Active ({getMaskedApiKey()})</span>
+            </button>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-3">
@@ -323,9 +352,17 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
               </div>
             </div>
 
-            <span className="text-[11px] font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg self-start sm:self-auto">
-              Model: {geminiResult.model}
-            </span>
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              <span className="text-[11px] font-mono text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg">
+                Model: {geminiResult.model}
+              </span>
+              {geminiResult.googleMapsSource && (
+                <span className="text-[11px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-700/60 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-emerald-400" />
+                  <span>{geminiResult.googleMapsSource}</span>
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Gemini AI Reasoning Content */}
@@ -457,6 +494,127 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
 
           </div>
 
+        </div>
+      )}
+
+      {/* Google Maps API Key Configuration Modal */}
+      {showKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 text-white shadow-2xl space-y-4 relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowKeyModal(false);
+                setTestResult('');
+                setKeySavedMessage('');
+              }}
+              className="absolute right-4 top-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Google Maps API Configuration</h3>
+                <p className="text-xs text-slate-400">
+                  Powers real-time geolocation, places search, and navigation for Gemini
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-300 block">
+                Google Maps API Key (VITE_GOOGLE_MAPS_API_KEY):
+              </label>
+              <input
+                type="text"
+                value={customKeyInput}
+                onChange={(e) => setCustomKeyInput(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <span className="text-[11px] text-slate-400 block">
+                Current active key: <strong className="text-emerald-400">{getMaskedApiKey()}</strong>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                disabled={testingKey}
+                onClick={async () => {
+                  setTestingKey(true);
+                  setTestResult('');
+                  try {
+                    const loc = await geocodeLocationWithGoogleMaps('Kochi');
+                    setTestResult(`✅ Geocoding Connected! Resolved ${loc.cityName} (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}) via ${loc.source}`);
+                  } catch (err: any) {
+                    setTestResult(`⚠️ Note: ${err?.message || 'Geocoding active with smart fallback'}`);
+                  } finally {
+                    setTestingKey(false);
+                  }
+                }}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer"
+              >
+                {testingKey ? 'Testing Connection...' : 'Test Location Geocoding'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomKeyInput('AIzaSyCGSg1tsQTyEA5uJnS3R0ndTaK-l6cAE8A');
+                  setGoogleMapsApiKey('AIzaSyCGSg1tsQTyEA5uJnS3R0ndTaK-l6cAE8A');
+                  setTestResult('Reset to Project Default Key.');
+                }}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer"
+              >
+                Reset Default Key
+              </button>
+            </div>
+
+            {testResult && (
+              <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-emerald-300">
+                {testResult}
+              </div>
+            )}
+
+            {keySavedMessage && (
+              <div className="p-2.5 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-xs text-emerald-300">
+                {keySavedMessage}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowKeyModal(false);
+                  setTestResult('');
+                  setKeySavedMessage('');
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setGoogleMapsApiKey(customKeyInput);
+                  setKeySavedMessage('Google Maps API Key saved! Gemini will use this key for all locations.');
+                  setTimeout(() => {
+                    setKeySavedMessage('');
+                    setShowKeyModal(false);
+                  }, 1200);
+                }}
+                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/30 cursor-pointer"
+              >
+                Save & Apply Key
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
