@@ -185,7 +185,7 @@ app.get('/', (req: Request, res: Response) => {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TourMatch AI - Test Server Dashboard</title>
+  <title>TravelAI - Test Server Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -201,7 +201,7 @@ app.get('/', (req: Request, res: Response) => {
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           Live Test Server • Port 5001
         </div>
-        <h1 class="text-2xl font-black text-white">TourMatch AI Test Harness</h1>
+        <h1 class="text-2xl font-black text-white">TravelAI Test Harness</h1>
         <p class="text-xs text-slate-400 mt-1">
           Automated validation suite testing Google Maps check-in rankings, guide linkages, and multi-party split payouts.
         </p>
@@ -246,7 +246,7 @@ app.get('/', (req: Request, res: Response) => {
         <a href="/test/run-all" target="_blank" class="text-amber-400 hover:underline">→ Raw JSON Test API (/test/run-all)</a>
       </div>
       <div>
-        TourMatch AI Test Harness • Version 1.0.0
+        TravelAI Test Harness • Version 1.0.0
       </div>
     </div>
 
@@ -307,5 +307,5 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.listen(TEST_PORT, () => {
-  console.log(`🧪 TourMatch Dedicated Test Server running on http://localhost:${TEST_PORT}`);
+  console.log(`🧪 TravelAI Dedicated Test Server running on http://localhost:${TEST_PORT}`);
 });

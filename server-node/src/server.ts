@@ -433,7 +433,7 @@ app.get('/api/system/status', (req: Request, res: Response) => {
 
 // Start HTTP Server immediately
 app.listen(PORT, () => {
-  console.log(`🚀 TourMatch Node.js API Gateway running on http://localhost:${PORT}`);
+  console.log(`🚀 TravelAI Node.js API Gateway running on http://localhost:${PORT}`);
   // Connect databases asynchronously in the background
   connectDatabases().catch((err) => {
     console.warn('Database background connection note:', err.message);

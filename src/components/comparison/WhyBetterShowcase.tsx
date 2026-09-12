@@ -123,7 +123,7 @@ export const WhyBetterShowcase: React.FC = () => {
         </div>
         
         <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">
-          Why TourMatch AI is <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">10x Better</span> Than Other Websites
+          Why TravelAI is <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">10x Better</span> Than Other Websites
         </h2>
         
         <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
@@ -210,7 +210,7 @@ export const WhyBetterShowcase: React.FC = () => {
                   <th className="p-4 w-2/5 text-emerald-400 bg-emerald-950/20">
                     <div className="flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-emerald-400" />
-                      <span className="font-bold">TourMatch AI Platform</span>
+                      <span className="font-bold">TravelAI Platform</span>
                     </div>
                   </th>
                   <th className="p-4 w-1/3">Traditional Portals (MMT, TripAdvisor, etc.)</th>

@@ -325,7 +325,7 @@ export const HotelPartnerPortal: React.FC<HotelPartnerPortalProps> = ({
                         </span>
                       </div>
                       <p className="text-xs text-slate-600 mt-2 pl-6">
-                        Opt into TourMatch's verified local guide pool. Travelers bundling community guides with their stay earn your hotel an affiliate referral fee on every guide booked!
+                        Opt into TravelAI's verified local guide pool. Travelers bundling community guides with their stay earn your hotel an affiliate referral fee on every guide booked!
                       </p>
                     </div>
                   </div>

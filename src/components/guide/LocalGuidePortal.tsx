@@ -124,7 +124,7 @@ export const LocalGuidePortal: React.FC<LocalGuidePortalProps> = ({
               </span>
             ) : (
               <span className="text-[11px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">
-                TourMatch Verified Community Pool
+                TravelAI Verified Community Pool
               </span>
             )}
           </div>
@@ -231,7 +231,7 @@ export const LocalGuidePortal: React.FC<LocalGuidePortalProps> = ({
           </div>
 
           <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 text-[11px] text-amber-900">
-            🛡️ Certified guides maintain a 98% satisfaction rating across the TourMatch verified partner network.
+            🛡️ Certified guides maintain a 98% satisfaction rating across the TravelAI verified partner network.
           </div>
         </div>
 

@@ -220,7 +220,7 @@ export function App() {
       <footer className="mt-auto border-t border-slate-200 bg-white py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-800">TourMatch AI Ecosystem</span>
+            <span className="font-bold text-slate-800">TravelAI Ecosystem</span>
             <span>&bull;</span>
             <span>Direct Proximity & Footfall Verification</span>
             <span>&bull;</span>

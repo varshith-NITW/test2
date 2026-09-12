@@ -29,7 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-lg tracking-tight text-slate-900">
-                  TourMatch<span className="text-emerald-600">.AI</span>
+                  Travel<span className="text-emerald-600">AI</span>
                 </span>
                 <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
                   <ShieldCheck className="w-3 h-3" /> Verified Ecosystem

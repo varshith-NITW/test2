@@ -18,7 +18,7 @@ class ExtractedTripConstraints(BaseModel):
 parser = PydanticOutputParser(pydantic_object=ExtractedTripConstraints)
 
 EXTRACTION_PROMPT_TEMPLATE = """
-You are an expert travel AI agent for TourMatch. Your job is to extract traveler constraints from a natural language query with zero hallucination.
+You are an expert travel AI agent for TravelAI. Your job is to extract traveler constraints from a natural language query with zero hallucination.
 
 Format Instructions:
 {format_instructions}

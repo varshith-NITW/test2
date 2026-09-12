@@ -1,4 +1,4 @@
-# TourMatch AI - Check-In Driven Tourism & Proximity Ecosystem
+# TravelAI - Check-In Driven Tourism & Proximity Ecosystem
 
 [![Ranking Metric](https://img.shields.io/badge/Ranking-100%25%20Verified%20Footfall%20Check--ins-brightgreen.svg)](#ranking-methodology)
 [![Payment Gateway](https://img.shields.io/badge/Payments-Razorpay%20Split%20Escrow-blue.svg)](https://razorpay.com)
@@ -17,7 +17,7 @@ India's tourism ecosystem is burdened by four major structural issues:
 3. **Exploited Local Guides**: Government-licensed guides and historians operate in the unorganized sector, losing up to 40% of their earnings to intermediaries.
 4. **Disjointed Payment Checkouts**: Tourists undergo multiple uncoordinated transactions without unified invoice protection or escrow security.
 
-**TourMatch AI** completely reimagines the journey through a **4-Step Layer System**, a **100% Check-In Footfall Ranking Engine (Zero Rating Bias)**, a **3-in-1 Hyper-Local Proximity Radar (Hotels + Food + Guides)**, and a **Unified Razorpay Escrow Split Gateway**.
+**TravelAI** completely reimagines the journey through a **4-Step Layer System**, a **100% Check-In Footfall Ranking Engine (Zero Rating Bias)**, a **3-in-1 Hyper-Local Proximity Radar (Hotels + Food + Guides)**, and a **Unified Razorpay Escrow Split Gateway**.
 
 ---
 
@@ -55,9 +55,9 @@ flowchart LR
 
 ---
 
-## 📊 Why TourMatch AI is 10x Better Than Other Portals
+## 📊 Why TravelAI is 10x Better Than Other Portals
 
-| Dimension | TourMatch AI Ecosystem | MakeMyTrip / Booking.com | TripAdvisor / Google Reviews |
+| Dimension | TravelAI Platform | MakeMyTrip / Booking.com | TripAdvisor / Google Reviews |
 |---|---|---|---|
 | **Ranking Methodology** | **100% Real Footfall Check-ins** (Zero Rating Bias) | Algorithmic sponsorship & 1-5 star ratings | Unvetted user reviews prone to bot fraud |
 | **Proximity Bundling** | **3-in-1 Radar**: Hotel + Food + Guide within 1-5km | Isolated hotel listings only | No bundled booking ecosystem |

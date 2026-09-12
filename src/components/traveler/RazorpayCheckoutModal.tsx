@@ -184,7 +184,7 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
                 <span>Razorpay Trusted Business</span>
               </div>
               <h3 className="text-lg font-black text-white">
-                TourMatch AI Checkout
+                TravelAI Checkout
               </h3>
             </div>
           </div>

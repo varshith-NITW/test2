@@ -11,7 +11,7 @@ from app.chains.langchain_agent import (
 )
 
 app = FastAPI(
-    title="TourMatch AI Microservice",
+    title="TravelAI Microservice",
     description="FastAPI + PyTorch + LangChain + OpenAI API stay recommendation and check-in ranking engine",
     version="1.0.0"
 )

@@ -1,4 +1,4 @@
-# TourMatch AI - AWS Production Cloud Architecture
+# TravelAI - AWS Production Cloud Architecture
 
 This document specifies the enterprise cloud architecture deployed on **Amazon Web Services (AWS)** strictly utilizing the designated technology stack.
 

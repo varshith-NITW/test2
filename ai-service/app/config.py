@@ -2,7 +2,7 @@ import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    APP_NAME: str = "TourMatch AI & PyTorch Recommendation Service"
+    APP_NAME: str = "TravelAI & PyTorch Recommendation Service"
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")

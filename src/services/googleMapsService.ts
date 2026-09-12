@@ -14,14 +14,15 @@ import { TouristSpot, Hotel, Restaurant, RoomType } from '../types';
 // Default project key from environment
 const ENV_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCGSg1tsQTyEA5uJnS3R0ndTaK-l6cAE8A';
 
-const STORAGE_KEY = 'tourmatch_google_maps_api_key';
+const STORAGE_KEY = 'travelai_google_maps_api_key';
+const LEGACY_STORAGE_KEY = 'tourmatch_google_maps_api_key';
 
 /**
  * Get active Google Maps API Key (User custom override -> .env -> project default)
  */
 export function getGoogleMapsApiKey(): string {
   if (typeof window !== 'undefined') {
-    const customKey = localStorage.getItem(STORAGE_KEY);
+    const customKey = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (customKey && customKey.trim().length > 10) {
       return customKey.trim();
     }
