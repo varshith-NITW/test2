@@ -143,7 +143,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
           <h4 className="text-sm font-bold text-emerald-950 flex items-center gap-2">
             <span>Why Our AI Ranks by Number of Check-Ins (Not Star Ratings)</span>
             <span className="px-2 py-0.5 rounded-full bg-emerald-200/80 text-emerald-800 text-[10px] uppercase font-bold">
-              AICTE Innovation
+              Verified Technology
             </span>
           </h4>
           <p className="text-xs text-emerald-800 mt-1 leading-relaxed">

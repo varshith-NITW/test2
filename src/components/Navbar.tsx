@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Hotel, Users, ShieldCheck, DollarSign, Sparkles, MapPin, Award, Zap } from 'lucide-react';
+import { Compass, Hotel, Users, ShieldCheck, DollarSign, Sparkles, MapPin, Zap } from 'lucide-react';
 
 export type PersonaType = 'traveler' | 'hotel' | 'guide' | 'split';
 
@@ -7,7 +7,6 @@ interface NavbarProps {
   currentPersona: PersonaType;
   onSelectPersona: (persona: PersonaType) => void;
   bookingCount: number;
-  onOpenSIHModal?: () => void;
   onScrollToComparison?: () => void;
 }
 
@@ -15,7 +14,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentPersona,
   onSelectPersona,
   bookingCount,
-  onOpenSIHModal,
   onScrollToComparison
 }) => {
   return (
@@ -34,7 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   TourMatch<span className="text-emerald-600">.AI</span>
                 </span>
                 <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  <ShieldCheck className="w-3 h-3" /> SIH26204 AICTE
+                  <ShieldCheck className="w-3 h-3" /> Verified Ecosystem
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-slate-500">
@@ -47,19 +45,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Quick Action Badges (SIH & Why Better) */}
+          {/* Quick Action Button (Why Better) */}
           <div className="hidden lg:flex items-center gap-2">
-            {onOpenSIHModal && (
-              <button
-                type="button"
-                onClick={onOpenSIHModal}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 text-xs font-bold transition-colors cursor-pointer"
-              >
-                <Award className="w-3.5 h-3.5 text-orange-600" />
-                <span>SIH26204 Pitch</span>
-              </button>
-            )}
-
             {onScrollToComparison && (
               <button
                 type="button"

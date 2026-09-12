@@ -16,7 +16,6 @@ import { ProximityRadarView } from './ProximityRadarView';
 import { TripPackageSummary } from './TripPackageSummary';
 import { RazorpayCheckoutModal } from './RazorpayCheckoutModal';
 import { WhyBetterShowcase } from '../comparison/WhyBetterShowcase';
-import { SIHModal } from '../sih/SIHModal';
 
 interface TravelerHomeProps {
   spots: TouristSpot[];
@@ -25,8 +24,6 @@ interface TravelerHomeProps {
   guides: Guide[];
   onSelectHotelForBooking?: (hotel: Hotel, matchedGuide?: Guide) => void;
   onBookingSuccess?: (booking: Booking) => void;
-  showSIHModalDirect?: boolean;
-  onCloseSIHModal?: () => void;
 }
 
 export const TravelerHome: React.FC<TravelerHomeProps> = ({
@@ -34,9 +31,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
   hotels,
   restaurants,
   guides,
-  onBookingSuccess,
-  showSIHModalDirect = false,
-  onCloseSIHModal
+  onBookingSuccess
 }) => {
   // Step layer state
   const [currentStep, setCurrentStep] = useState<StepLayer>('step1_spots');
@@ -52,7 +47,6 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
 
   // Modals
   const [showRazorpayModal, setShowRazorpayModal] = useState<boolean>(false);
-  const [isSIHModalOpen, setIsSIHModalOpen] = useState<boolean>(showSIHModalDirect);
 
   const comparisonSectionRef = useRef<HTMLDivElement>(null);
 
@@ -172,16 +166,6 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
       <div ref={comparisonSectionRef} id="why-better-section">
         <WhyBetterShowcase />
       </div>
-
-      {/* SIH Hackathon (SIH26204) Modal */}
-      {isSIHModalOpen && (
-        <SIHModal
-          onClose={() => {
-            setIsSIHModalOpen(false);
-            if (onCloseSIHModal) onCloseSIHModal();
-          }}
-        />
-      )}
 
     </div>
   );

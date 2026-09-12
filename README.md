@@ -1,12 +1,11 @@
-# TourMatch AI - Check-In Driven Tourism & Proximity Ecosystem (SIH26204)
+# TourMatch AI - Check-In Driven Tourism & Proximity Ecosystem
 
-[![Smart India Hackathon 2026](https://img.shields.io/badge/SIH%202026-Problem%20ID%3A%20SIH26204-orange.svg)](https://sih.gov.in)
-[![AICTE Student Innovation](https://img.shields.io/badge/AICTE-Student%20Innovation%20Tourism-blue.svg)](https://www.aicte-india.org)
 [![Ranking Metric](https://img.shields.io/badge/Ranking-100%25%20Verified%20Footfall%20Check--ins-brightgreen.svg)](#ranking-methodology)
 [![Payment Gateway](https://img.shields.io/badge/Payments-Razorpay%20Split%20Escrow-blue.svg)](https://razorpay.com)
+[![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20Tailwind%20%7C%20Vite%20%7C%20Node.js-indigo.svg)](#system-architecture)
 
-> **Official SIH Solution for Problem Statement SIH26204**:  
-> *"Student Innovation - A solution/idea that can boost the current situation of the tourism industries including hotels, travel, dining and others (AICTE)."*
+> **Next-Gen Tourism & Hospitality Intelligence Platform**:  
+> Eliminating fake bot reviews through verified physical footfall check-ins, delivering 3-in-1 hyper-local proximity clustering (Hotels + Restaurants + Certified Guides), and providing unified Razorpay checkout.
 
 ---
 
@@ -84,8 +83,6 @@ test2_repo/
 │   │   │   └── TravelerHome.tsx          # Master traveler controller
 │   │   ├── comparison/
 │   │   │   └── WhyBetterShowcase.tsx     # Comprehensive comparison showcase
-│   │   ├── sih/
-│   │   │   └── SIHModal.tsx              # SIH26204 AICTE Hackathon pitch modal
 │   │   ├── common/
 │   │   │   └── InteractiveMap.tsx        # Leaflet 5km spatial radar
 │   │   ├── hotel/                        # Hotel partner onboarding & inventory
@@ -127,14 +124,6 @@ To push this complete implementation to your remote repository `https://github.c
 
 ```bash
 git add .
-git commit -m "feat: complete AI tourism platform with check-in ranking, proximity hotels/food/guides, and razorpay checkout (SIH26204)"
+git commit -m "feat: complete AI tourism platform with check-in ranking, proximity hotels/food/guides, and razorpay checkout"
 git push origin main
 ```
-
----
-
-## 🏆 Smart India Hackathon 2026 Team Pitch
-
-- **Problem Statement ID**: `SIH26204`
-- **Category**: Student Innovation - Tourism & Hospitality (AICTE)
-- **Target Impact**: Boosts domestic tourism, protects tourists from review fraud, formalizes local guide livelihoods, and channels direct footfalls to regional hotels and eateries.

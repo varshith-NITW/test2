@@ -119,7 +119,7 @@ export const WhyBetterShowcase: React.FC = () => {
       <div className="relative z-10 max-w-4xl mx-auto text-center mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-4">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>SIH26204 Student Innovation for Indian Tourism & Hospitality</span>
+          <span>Next-Gen Tourism & Hospitality Intelligence Platform</span>
         </div>
         
         <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">

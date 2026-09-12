@@ -8,7 +8,6 @@ import { CheckoutModal } from './components/traveler/CheckoutModal';
 import { HotelPartnerPortal } from './components/hotel/HotelPartnerPortal';
 import { LocalGuidePortal } from './components/guide/LocalGuidePortal';
 import { SplitPaymentSimulator } from './components/split/SplitPaymentSimulator';
-import { SIHModal } from './components/sih/SIHModal';
 import { calculateSplitBreakdown } from './services/paymentSplitService';
 import { createBookingViaNodeAPI } from './services/apiClient';
 
@@ -18,7 +17,6 @@ export function App() {
   const [hotels, setHotels] = useState<Hotel[]>(INITIAL_HOTELS);
   const [restaurants, setRestaurants] = useState<Restaurant[]>(INITIAL_RESTAURANTS);
   const [guides, setGuides] = useState<Guide[]>(INITIAL_GUIDES);
-  const [isSIHModalOpen, setIsSIHModalOpen] = useState<boolean>(false);
 
   // Initial seed booking to populate hotel and guide portals immediately
   const initialBookingSplit = calculateSplitBreakdown({
@@ -125,12 +123,11 @@ export function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-emerald-500 selection:text-white">
       
-      {/* Top Global Navbar with Persona Switcher & Quick SIH Links */}
+      {/* Top Global Navbar with Persona Switcher & Quick Navigation */}
       <Navbar
         currentPersona={currentPersona}
         onSelectPersona={(persona) => setCurrentPersona(persona)}
         bookingCount={bookings.length}
-        onOpenSIHModal={() => setIsSIHModalOpen(true)}
         onScrollToComparison={handleScrollToComparison}
       />
 
@@ -198,18 +195,13 @@ export function App() {
         />
       )}
 
-      {/* Global SIH26204 Problem Statement Pitch Modal */}
-      {isSIHModalOpen && (
-        <SIHModal onClose={() => setIsSIHModalOpen(false)} />
-      )}
-
       {/* Persistent Clean Footer */}
       <footer className="mt-auto border-t border-slate-200 bg-white py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-800">TourMatch AI Ecosystem</span>
             <span>&bull;</span>
-            <span>Smart India Hackathon (SIH26204)</span>
+            <span>Direct Proximity & Footfall Verification</span>
             <span>&bull;</span>
             <span className="text-emerald-700 font-semibold">100% Real Footfall Check-Ins Ranked</span>
           </div>
