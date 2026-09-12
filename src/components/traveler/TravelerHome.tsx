@@ -16,6 +16,8 @@ import { ProximityRadarView } from './ProximityRadarView';
 import { TripPackageSummary } from './TripPackageSummary';
 import { RazorpayCheckoutModal } from './RazorpayCheckoutModal';
 import { WhyBetterShowcase } from '../comparison/WhyBetterShowcase';
+import { generateProximityInventoryForSpot } from '../../services/placesService';
+import { calculateHaversineDistance } from '../../services/spatialService';
 
 interface TravelerHomeProps {
   spots: TouristSpot[];
@@ -24,6 +26,8 @@ interface TravelerHomeProps {
   guides: Guide[];
   onSelectHotelForBooking?: (hotel: Hotel, matchedGuide?: Guide) => void;
   onBookingSuccess?: (booking: Booking) => void;
+  onAddSpot?: (spot: TouristSpot) => void;
+  onAddInventory?: (inventory: { hotels: Hotel[]; restaurants: Restaurant[]; guides: Guide[] }) => void;
 }
 
 export const TravelerHome: React.FC<TravelerHomeProps> = ({
@@ -31,13 +35,16 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
   hotels,
   restaurants,
   guides,
-  onBookingSuccess
+  onBookingSuccess,
+  onAddSpot,
+  onAddInventory
 }) => {
   // Step layer state
   const [currentStep, setCurrentStep] = useState<StepLayer>('step1_spots');
 
   // Selected trip state
   const [selectedSpotId, setSelectedSpotId] = useState<string>(spots[0]?.id || '');
+  const [activeSpotOverride, setActiveSpotOverride] = useState<TouristSpot | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(hotels[0] || null);
   const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(hotels[0]?.roomTypes[0] || null);
   const [selectedRestaurantPass, setSelectedRestaurantPass] = useState<RestaurantPassSelection | null>(null);
@@ -50,18 +57,42 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
 
   const comparisonSectionRef = useRef<HTMLDivElement>(null);
 
-  const selectedSpot = spots.find(s => s.id === selectedSpotId) || spots[0];
+  const selectedSpot = activeSpotOverride || spots.find(s => s.id === selectedSpotId) || spots[0];
 
-  const handleSelectSpot = (spotId: string) => {
-    setSelectedSpotId(spotId);
-    // Find top hotel in proximity to that spot
-    const spot = spots.find(s => s.id === spotId);
-    if (spot) {
-      const cityHotels = hotels.filter(h => h.city.toLowerCase() === spot.city.toLowerCase());
-      if (cityHotels.length > 0) {
-        setSelectedHotel(cityHotels[0]);
-        setSelectedRoom(cityHotels[0].roomTypes[0]);
+  const handleSelectSpot = (spotOrId: TouristSpot | string) => {
+    let spot: TouristSpot | undefined;
+    if (typeof spotOrId === 'string') {
+      spot = spots.find(s => s.id === spotOrId);
+    } else {
+      spot = spotOrId;
+    }
+
+    if (!spot) return;
+
+    setSelectedSpotId(spot.id);
+    setActiveSpotOverride(spot);
+
+    if (onAddSpot && !spots.some(s => s.id === spot!.id)) {
+      onAddSpot(spot);
+    }
+
+    // Check if we have hotels in this city or in 15km proximity
+    const cityHotels = hotels.filter(h => 
+      h.city.toLowerCase() === spot!.city.toLowerCase() ||
+      calculateHaversineDistance(spot!.location, h.location) <= 15
+    );
+
+    if (cityHotels.length > 0) {
+      setSelectedHotel(cityHotels[0]);
+      setSelectedRoom(cityHotels[0].roomTypes[0]);
+    } else {
+      // Dynamically generate proximity inventory for this spot
+      const dynamicInv = generateProximityInventoryForSpot(spot);
+      if (onAddInventory) {
+        onAddInventory(dynamicInv);
       }
+      setSelectedHotel(dynamicInv.hotels[0]);
+      setSelectedRoom(dynamicInv.hotels[0].roomTypes[0]);
     }
   };
 

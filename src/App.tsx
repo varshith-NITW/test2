@@ -13,7 +13,7 @@ import { createBookingViaNodeAPI } from './services/apiClient';
 
 export function App() {
   const [currentPersona, setCurrentPersona] = useState<PersonaType>('traveler');
-  const [spots] = useState<TouristSpot[]>(INITIAL_TOURIST_SPOTS);
+  const [spots, setSpots] = useState<TouristSpot[]>(INITIAL_TOURIST_SPOTS);
   const [hotels, setHotels] = useState<Hotel[]>(INITIAL_HOTELS);
   const [restaurants, setRestaurants] = useState<Restaurant[]>(INITIAL_RESTAURANTS);
   const [guides, setGuides] = useState<Guide[]>(INITIAL_GUIDES);
@@ -113,6 +113,16 @@ export function App() {
     setGuides((prev) => [newGuide, ...prev]);
   };
 
+  const handleAddSpot = (spot: TouristSpot) => {
+    setSpots((prev) => (prev.some((s) => s.id === spot.id) ? prev : [spot, ...prev]));
+  };
+
+  const handleAddInventory = (inv: { hotels: Hotel[]; restaurants: Restaurant[]; guides: Guide[] }) => {
+    setHotels((prev) => [...inv.hotels.filter(nh => !prev.some(h => h.id === nh.id)), ...prev]);
+    setRestaurants((prev) => [...inv.restaurants.filter(nr => !prev.some(r => r.id === nr.id)), ...prev]);
+    setGuides((prev) => [...inv.guides.filter(ng => !prev.some(g => g.id === ng.id)), ...prev]);
+  };
+
   const handleScrollToComparison = () => {
     const el = document.getElementById('why-better-section');
     if (el) {
@@ -142,6 +152,8 @@ export function App() {
             guides={guides}
             onSelectHotelForBooking={handleSelectHotelForBooking}
             onBookingSuccess={handleBookingConfirmed}
+            onAddSpot={handleAddSpot}
+            onAddInventory={handleAddInventory}
           />
         )}
 

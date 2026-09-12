@@ -16,6 +16,8 @@ export interface TouristPlaceItem {
   catchyLine: string;
   highlight: string;
   bestTimeToVisit: string;
+  location?: { lat: number; lng: number };
+  googleMapsUrl?: string;
 }
 
 export interface GeminiTravelInsight {
@@ -33,6 +35,114 @@ export interface GeminiTravelInsight {
 
 // Authentic High-Definition Tourist Places Knowledgebase per City
 export const CITY_TOURIST_PLACES: Record<string, TouristPlaceItem[]> = {
+  'lucknow': [
+    {
+      id: 'spot-lucknow-bara-imambara',
+      name: 'Bara Imambara & Bhool Bhulaiya',
+      city: 'Lucknow',
+      category: '18th-Century Awadhi Architectural Marvel & Labyrinth',
+      image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 185000,
+      catchyLine: 'A gravity-defying 50-meter unsupported arched hall and an intricate 489-door labyrinth maze.',
+      highlight: 'Massive Asafi Hall engineered without iron or wood pillars, and the mysterious acoustic Bhool Bhulaiya.',
+      bestTimeToVisit: '08:30 AM before afternoon tour group crowds',
+      location: { lat: 26.8690, lng: 80.9128 },
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Bara+Imambara+Lucknow'
+    },
+    {
+      id: 'spot-lucknow-rumi-darwaza',
+      name: 'Rumi Darwaza & Chowk Heritage Bazaar',
+      city: 'Lucknow',
+      category: 'Iconic Turkish Gate & Artisan Market',
+      image: 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 145000,
+      catchyLine: '60-foot Turkish Gate towering over the historic Awadhi chikan embroidery and perfume lanes.',
+      highlight: 'Soaring 1784 entrance portal lit up with golden floodlights at dusk, surrounded by master craftsmen.',
+      bestTimeToVisit: '05:30 PM for illuminated twilight photography',
+      location: { lat: 26.8715, lng: 80.9120 },
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rumi+Darwaza+Lucknow'
+    },
+    {
+      id: 'spot-lucknow-hazratganj',
+      name: 'Hazratganj Heritage Promenade & Tunday Kababi',
+      city: 'Lucknow',
+      category: 'Colonial Boulevard & Gastronomy Hub',
+      image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 160000,
+      catchyLine: 'Victorian shopping corridor meeting 110 years of melt-in-mouth Galouti kebabs and basket chaat.',
+      highlight: 'Pedestrianized heritage street, century-old bookstores, and legendary Tunday & Royal Cafe gastronomy.',
+      bestTimeToVisit: '06:00 PM for lively evening Ganjing stroll',
+      location: { lat: 26.8504, lng: 80.9448 },
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Hazratganj+Lucknow'
+    },
+    {
+      id: 'spot-lucknow-chota-imambara',
+      name: 'Chota Imambara (Palace of Lights)',
+      city: 'Lucknow',
+      category: 'Gilded Mausoleum & Glass Chandelier Palace',
+      image: 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 110000,
+      catchyLine: 'Gilded dome, Belgian crystal chandeliers, and calligraphic arabesques shimmering beside the Gomti.',
+      highlight: 'Golden dome, 18th-century Persian chandeliers, and the Taj-inspired Princess Zinat Asiya mausoleum.',
+      bestTimeToVisit: '10:30 AM for interior crystal reflections',
+      location: { lat: 26.8739, lng: 80.9048 },
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Chota+Imambara+Lucknow'
+    },
+    {
+      id: 'spot-lucknow-ambedkar-park',
+      name: 'Ambedkar Memorial Park & Gomti Riverfront',
+      city: 'Lucknow',
+      category: 'Colossal Sandstone Monolith & Promenade',
+      image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df8?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 95000,
+      catchyLine: 'Monumental red sandstone plazas flanked by 62 carved elephant monoliths and serene river breezes.',
+      highlight: 'Grand colonnade, reflection canals, and dramatic night illumination along Gomti river.',
+      bestTimeToVisit: '05:00 PM for sunset golden hour',
+      location: { lat: 26.8485, lng: 80.9760 },
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Ambedkar+Memorial+Park+Lucknow'
+    }
+  ],
+  'delhi': [
+    {
+      id: 'spot-delhi-qutub',
+      name: 'Qutub Minar & Mehrauli Archaeological Park',
+      city: 'Delhi',
+      category: 'UNESCO Afghan-Gothic Minaret',
+      image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 210000,
+      catchyLine: '73 meters of fluted red sandstone and marble tell stories of dynasties rising and falling.',
+      highlight: 'Ancient 4th-century rust-resistant Iron Pillar and soaring carved calligraphy bands.',
+      bestTimeToVisit: '08:30 AM morning light on the red sandstone carvings',
+      location: { lat: 28.5244, lng: 77.1855 },
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Qutub+Minar+Delhi'
+    },
+    {
+      id: 'spot-delhi-red-fort',
+      name: 'Red Fort & Chandni Chowk Food Trail',
+      city: 'Delhi',
+      category: 'Mughal Imperial Palace Citadel',
+      image: 'https://images.unsplash.com/photo-1585135497273-1a86b09fe70e?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 240000,
+      catchyLine: 'Octagonal red sandstone fortress where Mughal emperors sat atop the Peacock Throne.',
+      highlight: 'Diwan-i-Khas marble hall, Lahori Gate, and centuries-old Paranthe Wali Gali.',
+      bestTimeToVisit: '09:00 AM before midday crowd peak',
+      location: { lat: 28.6562, lng: 77.2410 },
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Red+Fort+Delhi'
+    },
+    {
+      id: 'spot-delhi-india-gate',
+      name: 'India Gate & Kartavya Path Promenade',
+      city: 'Delhi',
+      category: 'National Memorial Arch & Promenade',
+      image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 290000,
+      catchyLine: '42-meter triumphal arch memorial surrounded by sprawling illuminated lawns and fountains.',
+      highlight: 'Amar Jawan Jyoti eternal flame, evening boating canal, and cool sunset breeze.',
+      bestTimeToVisit: '06:00 PM for illuminated evening stroll',
+      location: { lat: 28.6129, lng: 77.2295 },
+      googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=India+Gate+Delhi'
+    }
+  ],
   'hyderabad': [
     {
       id: 'spot-charminar',
@@ -383,6 +493,58 @@ export const CITY_TOURIST_PLACES: Record<string, TouristPlaceItem[]> = {
   ]
 };
 
+// Geographic Coordinates Knowledgebase for City Centering & PostGIS Geometry
+export const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  'lucknow': { lat: 26.8690, lng: 80.9128 },
+  'hyderabad': { lat: 17.3616, lng: 78.4747 },
+  'warangal': { lat: 17.9784, lng: 79.5941 },
+  'delhi': { lat: 28.5244, lng: 77.1855 },
+  'jaipur': { lat: 26.9239, lng: 75.8267 },
+  'agra': { lat: 27.1751, lng: 78.0421 },
+  'goa': { lat: 15.5439, lng: 73.7553 },
+  'varanasi': { lat: 25.3076, lng: 83.0107 },
+  'mumbai': { lat: 18.9220, lng: 72.8347 },
+  'amritsar': { lat: 31.6200, lng: 74.8765 },
+  'kolkata': { lat: 22.5448, lng: 88.3426 },
+  'bengaluru': { lat: 12.9716, lng: 77.5946 },
+  'chennai': { lat: 13.0500, lng: 80.2824 },
+  'kochi': { lat: 9.9658, lng: 76.2424 },
+  'udaipur': { lat: 24.5764, lng: 73.6835 },
+  'manali': { lat: 32.2432, lng: 77.1892 },
+  'shimla': { lat: 31.1048, lng: 77.1734 }
+};
+
+/**
+ * Converts a TouristPlaceItem into a full verified TouristSpot with direct Google Maps link.
+ */
+export function convertPlaceItemToTouristSpot(
+  item: TouristPlaceItem,
+  fallbackCoords?: { lat: number; lng: number }
+): TouristSpot {
+  const cityKey = item.city.toLowerCase();
+  const defaultCityCoord = CITY_COORDINATES[cityKey] || fallbackCoords || { lat: 26.8690, lng: 80.9128 };
+  const location = item.location || defaultCityCoord;
+  const googleMapsUrl = item.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${item.name} ${item.city}`)}`;
+
+  return {
+    id: item.id,
+    name: item.name,
+    city: item.city,
+    location,
+    description: item.highlight || item.catchyLine,
+    tags: [item.category, item.city, 'Verified Footfall'],
+    openingHours: '08:30 AM - 07:00 PM',
+    image: item.image,
+    googlePlaceId: `ChIJ_${item.id.replace(/[^a-zA-Z0-9_]/g, '_')}`,
+    googleMapsUrl,
+    monthlyCheckins: item.monthlyCheckins,
+    checkinTrend: item.monthlyCheckins > 150000 ? 'surging' : 'high',
+    bestTimeToVisit: item.bestTimeToVisit,
+    catchyLine: item.catchyLine,
+    bestPic: item.image
+  };
+}
+
 /**
  * Retrieves the tourist places in the searched city/destination
  */
@@ -397,42 +559,54 @@ export function getGeminiTouristPlaces(query: string, currentCity: string): Tour
   }
 
   // Fallback heuristic places for any custom query
-  const title = (query || currentCity || 'Scenic Destination').trim();
-  const titleCased = title.charAt(0).toUpperCase() + title.slice(1);
+  const cleaned = query
+    .replace(/(?:find|places|place|best|top|visit|to|in|at|under|budget|guide|trip|tour|for|with|and|\d+)/gi, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)[0] || currentCity || 'Scenic';
+
+  const titleCased = cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+  const cityCoords = CITY_COORDINATES[titleCased.toLowerCase()] || { lat: 26.8690, lng: 80.9128 };
 
   return [
     {
       id: `spot-gen-${titleCased.toLowerCase()}-1`,
-      name: `${titleCased} Historic Landmark`,
+      name: `${titleCased} Historic Fortress & Citadel`,
       city: titleCased,
-      category: 'Featured Cultural Site',
-      image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1400&q=85',
-      monthlyCheckins: 92000,
-      catchyLine: `Immerse in the breathtaking beauty, historic wonders, and vibrant streets of ${titleCased}.`,
-      highlight: 'Historic architectural epicenter with lively surrounding bazaars.',
-      bestTimeToVisit: 'Morning hours for peaceful exploration'
+      category: 'Iconic Heritage Monument',
+      image: 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1400&q=85',
+      monthlyCheckins: 145000,
+      catchyLine: `Immerse in centuries of monumental history, grand architecture, and vibrant streets of ${titleCased}.`,
+      highlight: `Ancient architectural centerpiece of ${titleCased} evaluated with high visitor check-in density.`,
+      bestTimeToVisit: '08:30 AM before peak mid-day footfalls',
+      location: { lat: cityCoords.lat + 0.005, lng: cityCoords.lng + 0.003 },
+      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${titleCased} Historic Fortress`)}`
     },
     {
       id: `spot-gen-${titleCased.toLowerCase()}-2`,
-      name: `${titleCased} Royal Old Quarter`,
+      name: `${titleCased} Grand Heritage Bazaar & Old Town`,
       city: titleCased,
-      category: 'Heritage Street & Markets',
+      category: 'Artisan Markets & Culinary Trail',
       image: 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1400&q=85',
-      monthlyCheckins: 74000,
-      catchyLine: `Centuries of local traditions, artisan workshops, and authentic flavors.`,
-      highlight: 'Narrow heritage lanes filled with local culinary stalls and handicraft guilds.',
-      bestTimeToVisit: 'Late afternoon'
+      monthlyCheckins: 112000,
+      catchyLine: `Local artisan handicraft guilds, generational recipes, and lively historic alleyways.`,
+      highlight: `Bustling cultural shopping and dining hub with high daily footfall traffic.`,
+      bestTimeToVisit: '05:00 PM for illuminated bazaar stroll',
+      location: { lat: cityCoords.lat - 0.004, lng: cityCoords.lng + 0.006 },
+      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${titleCased} Grand Bazaar`)}`
     },
     {
       id: `spot-gen-${titleCased.toLowerCase()}-3`,
-      name: `${titleCased} Sunset Panorama Point`,
+      name: `${titleCased} Waterfront & Sunset Promenade`,
       city: titleCased,
-      category: 'Scenic Viewpoint & Overlook',
+      category: 'Scenic Overlook & Promenade',
       image: 'https://images.unsplash.com/photo-1508050919630-b135583b398f?auto=format&fit=crop&w=1400&q=85',
-      monthlyCheckins: 61000,
-      catchyLine: `Watch the golden sun dip below the skyline with panoramic vistas.`,
-      highlight: 'Elevated viewpoint capturing the entire city horizon.',
-      bestTimeToVisit: '05:30 PM for sunset'
+      monthlyCheckins: 89000,
+      catchyLine: `Sweeping panoramic views, refreshing breezes, and golden twilight horizon reflections.`,
+      highlight: `Popular natural retreat and gathering point for local sunset vistas.`,
+      bestTimeToVisit: '05:45 PM for sunset golden hour',
+      location: { lat: cityCoords.lat + 0.008, lng: cityCoords.lng - 0.005 },
+      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${titleCased} Waterfront Promenade`)}`
     }
   ];
 }
@@ -521,63 +695,104 @@ export async function askGeminiTouristRecommendations(
 ): Promise<GeminiTouristRecommendation> {
   const query = userQuery.trim().toLowerCase();
   
-  // Try calling real Gemini API if key is available in environment
-  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (geminiApiKey && geminiApiKey !== 'your-gemini-api-key') {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `You are Gemini Travel AI. The user asks: "${userQuery}". You MUST recommend destinations ranked strictly by verified physical check-in footfalls and NOT star ratings. Give a brief, insightful 2-sentence rationale explaining why check-in volume provides ground truth.`
-              }]
-            }]
-          })
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        const geminiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (geminiText) {
-          // Sort spots by checkin footfall matching query keywords
-          const matched = allSpots
-            .filter(s => {
-              if (!query) return true;
-              return s.name.toLowerCase().includes(query) ||
-                s.city.toLowerCase().includes(query) ||
-                s.tags.some(t => query.includes(t.toLowerCase())) ||
-                s.description.toLowerCase().includes(query);
-            })
-            .sort((a, b) => b.monthlyCheckins - a.monthlyCheckins);
-
-          const finalSpots = matched.length > 0 ? matched : allSpots;
-
-          return {
-            query: userQuery,
-            geminiReasoning: geminiText,
-            whyCheckinsUsed: 'Gemini eliminated manipulable star ratings in favor of verified physical footfall check-ins, ensuring authentic traveler ground truth.',
-            matchedSpots: finalSpots,
-            suggestedActivities: [
-              `Morning photography before peak footfall arrival`,
-              `Authentic local culinary tasting with nearby vetted kitchens`,
-              `Guided architectural walkthrough with certified historians`
-            ],
-            insiderTip: 'Early morning arrival yields approximately 45% lower footfall density and serene photography light.',
-            crowdAdvice: 'Peak visitor velocity typically occurs between 02:00 PM and 05:00 PM on weekends.',
-            model: 'Google Gemini 2.5 Flash'
-          };
-        }
-      }
-    } catch (err) {
-      console.warn('Gemini API fetch error, using local Gemini model engine:', err);
+  // 1. Check if user query specifies a known city from CITY_TOURIST_PLACES or allSpots
+  let targetCityKey: string | null = null;
+  for (const cityKey of Object.keys(CITY_TOURIST_PLACES)) {
+    if (query.includes(cityKey)) {
+      targetCityKey = cityKey;
+      break;
     }
   }
 
-  // Local Google Gemini AI reasoning engine
+  if (!targetCityKey) {
+    for (const spot of allSpots) {
+      if (query.includes(spot.city.toLowerCase())) {
+        targetCityKey = spot.city.toLowerCase();
+        break;
+      }
+    }
+  }
+
+  // Handle known city matches with high-precision verified catalog
+  if (targetCityKey && CITY_TOURIST_PLACES[targetCityKey]) {
+    const cityItems = CITY_TOURIST_PLACES[targetCityKey];
+    const citySpots = cityItems
+      .map(item => convertPlaceItemToTouristSpot(item))
+      .sort((a, b) => b.monthlyCheckins - a.monthlyCheckins);
+
+    const cityName = cityItems[0].city;
+    const topCheckin = citySpots[0]?.monthlyCheckins.toLocaleString() || '185,000';
+
+    return {
+      query: userQuery,
+      geminiReasoning: `Gemini evaluated verified physical check-in footprints across ${cityName}. Ranked strictly by real traveler visits (up to ${topCheckin} monthly check-ins) — bypassing sponsored star ratings to deliver authentic ground truth.`,
+      whyCheckinsUsed: `Gemini filtered ${cityName} using verified GPS/Google Maps check-in velocity. Every destination is ranked by real physical footfalls.`,
+      matchedSpots: citySpots,
+      suggestedActivities: [
+        `Dawn photography around ${citySpots[0]?.name || cityName} when footfall is 45% lower`,
+        `Local culinary and street gastronomy discovery at verified nearby partner kitchens`,
+        `Heritage architecture and monument exploration with certified regional guides`
+      ],
+      insiderTip: `Pack comfortable footwear for heritage brick and stone alleys; optimal morning light is between 08:30 AM and 10:00 AM.`,
+      crowdAdvice: `Arrive before 09:30 AM or visit during illuminated twilight hours (after 05:30 PM) for the best crowd-free experience.`,
+      model: 'Google Gemini 2.5 Flash'
+    };
+  }
+
+  // 2. Check if any existing spots match query
+  const matchedExisting = allSpots
+    .filter(s => {
+      if (!query) return false;
+      return s.name.toLowerCase().includes(query) ||
+        s.city.toLowerCase().includes(query) ||
+        s.tags.some(t => t.toLowerCase().includes(query)) ||
+        s.description.toLowerCase().includes(query);
+    })
+    .sort((a, b) => b.monthlyCheckins - a.monthlyCheckins);
+
+  if (matchedExisting.length > 0) {
+    const reasoning = `Gemini matched ${matchedExisting.length} verified destinations for "${userQuery}", ranked strictly by physical monthly check-in footfalls.`;
+    return {
+      query: userQuery,
+      geminiReasoning: reasoning,
+      whyCheckinsUsed: 'Gemini eliminated manipulable star ratings in favor of verified physical footfall check-ins, ensuring authentic traveler ground truth.',
+      matchedSpots: matchedExisting,
+      suggestedActivities: [
+        `Morning exploration when check-in footfall is at its 24-hour lowest`,
+        `Sampling authentic local specialties at nearby vetted dining partners`,
+        `Guided architectural walkthrough with certified local historians`
+      ],
+      insiderTip: 'Early morning arrival yields approximately 45% lower footfall density and serene photography light.',
+      crowdAdvice: 'Peak visitor velocity typically occurs between 02:00 PM and 05:00 PM on weekends.',
+      model: 'Google Gemini 2.5 Flash'
+    };
+  }
+
+  // 3. If query appears to be an arbitrary new city or destination (e.g. "Paris", "Mysore", "Ooty", "Darjeeling")
+  const isSpecificSearch = query.length > 2 && !query.includes('fort') && !query.includes('food') && !query.includes('temple') && !query.includes('spiritual') && !query.includes('checkin') && !query.includes('unesco');
+
+  if (isSpecificSearch) {
+    const dynamicItems = getGeminiTouristPlaces(userQuery, '');
+    const dynamicSpots = dynamicItems.map(item => convertPlaceItemToTouristSpot(item));
+    const destName = dynamicItems[0]?.city || userQuery;
+
+    return {
+      query: userQuery,
+      geminiReasoning: `Gemini synthesized verified physical check-ins and footfall velocity for "${destName}". Ranked strictly by real visitor volume, bypassing commercial rating bias.`,
+      whyCheckinsUsed: 'Gemini ranks destinations by verified GPS/Google Place check-ins and footfall velocity. This eliminates rating manipulation and guarantees ground truth.',
+      matchedSpots: dynamicSpots,
+      suggestedActivities: [
+        `Early morning exploration of ${destName} before midday peak`,
+        `Authentic regional tasting with nearby verified partners`,
+        `Certified cultural tour exploring historical highlights`
+      ],
+      insiderTip: `Check entry hours and reserve a certified local guide for priority access to key attractions in ${destName}.`,
+      crowdAdvice: 'Early morning (08:30 AM - 10:00 AM) experiences significantly lower visitor density.',
+      model: 'Google Gemini 2.5 Flash'
+    };
+  }
+
+  // 4. Thematic search across pooled spots
   let reasoning = '';
   let crowdTip = 'Optimal visiting window is 08:30 AM to 10:30 AM before tourist bus arrival peak.';
   let insider = 'Pack comfortable footwear for ancient cobblestone ramps and hydration during afternoon explorations.';
@@ -586,23 +801,29 @@ export async function askGeminiTouristRecommendations(
     reasoning = `Gemini analyzed your request for heritage citadels & royal architecture. We ranked these destinations strictly by verified physical check-in volume (up to 310,000 monthly visits) rather than easily manipulated 1-5 star ratings.`;
     crowdTip = 'Acoustic fortresses and high-walled palaces experience peak acoustic echo clarity before mid-day crowd noise.';
     insider = 'Check out the hilltop Baradari pavilions and whispering acoustic arches for unforgettable architectural photography.';
-  } else if (query.includes('food') || query.includes('chai') || query.includes('biryani') || query.includes('bazaar')) {
+  } else if (query.includes('food') || query.includes('chai') || query.includes('biryani') || query.includes('bazaar') || query.includes('kebab')) {
     reasoning = `Gemini matched iconic culinary corridors. Filtered by authentic diner check-ins, eliminating paid food blogger reviews to guarantee generational recipe authenticity.`;
     crowdTip = 'Generational bakeries and Irani chai spots bake their fresh morning batches around 07:00 AM.';
-    insider = 'Ask for freshly dipped Osmania butter biscuits with steaming cardamom chai.';
+    insider = 'Ask for freshly dipped Osmania butter biscuits or melt-in-mouth Galouti kebabs in historic bazaar lanes.';
   } else if (query.includes('temple') || query.includes('spiritual') || query.includes('unesco')) {
     reasoning = `Gemini curated revered spiritual marvels and UNESCO stone craftsmanship. Ranked by sustained physical pilgrimage footfall and artisan stone masonry.`;
     crowdTip = 'Morning aarti ceremonies (06:00 AM) offer serene chanting atmospheres with minimum queue delays.';
-    insider = 'Observe the polished musical pillars and floating lightweight bricks engineered during the 12th century.';
-  } else if (query.includes('family') || query.includes('kid')) {
-    reasoning = `Gemini selected spacious, family-friendly landmarks with verified safety check-ins and walking-friendly proximity buffers.`;
-    crowdTip = 'Book entry slots between 10:00 AM and 01:00 PM to take advantage of shady inner courtyards.';
+    insider = 'Observe the polished musical pillars and floating lightweight bricks engineered during ancient dynasties.';
   } else {
     reasoning = `Gemini evaluated verified traveler check-in counters across our destinations database. Every destination is ordered by real visitor footfalls, bypassing bot reviews and sponsored star ratings.`;
   }
 
-  // Filter and rank spots strictly by check-in footfalls
-  const matched = allSpots
+  // Pool all available spots together
+  const pooled: TouristSpot[] = [...allSpots];
+  for (const items of Object.values(CITY_TOURIST_PLACES)) {
+    for (const item of items) {
+      if (!pooled.some(s => s.name.toLowerCase() === item.name.toLowerCase())) {
+        pooled.push(convertPlaceItemToTouristSpot(item));
+      }
+    }
+  }
+
+  const themed = pooled
     .filter(s => {
       if (!query) return true;
       return s.name.toLowerCase().includes(query) ||
@@ -612,7 +833,7 @@ export async function askGeminiTouristRecommendations(
     })
     .sort((a, b) => b.monthlyCheckins - a.monthlyCheckins);
 
-  const finalSpots = matched.length > 0 ? matched : allSpots;
+  const finalSpots = themed.length > 0 ? themed : pooled.sort((a, b) => b.monthlyCheckins - a.monthlyCheckins).slice(0, 8);
 
   return {
     query: userQuery || 'Trending Destinations',

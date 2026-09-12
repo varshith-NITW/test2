@@ -173,6 +173,76 @@ export const INITIAL_TOURIST_SPOTS: TouristSpot[] = [
       metroAvailable: true,
       localAdvice: 'Use Jaipur Metro Pink Line up to Badi Chaupar station, just 150m from Hawa Mahal.'
     }
+  },
+  {
+    id: 'spot-lucknow-bara-imambara',
+    name: 'Bara Imambara & Bhool Bhulaiya',
+    city: 'Lucknow',
+    location: { lat: 26.8690, lng: 80.9128 },
+    description: 'Monumental 18th-century Awadhi architectural marvel featuring a gravity-defying central arched hall and the intricate 489-passage Bhool Bhulaiya labyrinth maze.',
+    tags: ['Heritage', 'Labyrinth', 'Awadhi Architecture', 'Monument'],
+    openingHours: '06:00 AM - 06:30 PM',
+    image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1000&q=80',
+    googlePlaceId: 'ChIJ_lucknow_bara_imambara',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Bara+Imambara+Lucknow',
+    monthlyCheckins: 185000,
+    checkinTrend: 'surging',
+    bestTimeToVisit: '08:30 AM before tour bus arrivals, or 04:30 PM for sunset golden hour',
+    catchyLine: 'A gravity-defying 50-meter unsupported roof and a 489-door labyrinth whispered by centuries of Nawabi lore.',
+    bestPic: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1400&q=85',
+    survivalPhrases: [
+      { phrase: 'Awadhi Polite Greeting', translation: 'Adab / Namaste (آداب / नमस्ते)', pronunciation: 'Ah-daab', context: 'Universal polite greeting with right hand raised' },
+      { phrase: 'Where is the labyrinth maze?', translation: 'Bhool Bhulaiya kidhar hai? (भूल भुलैया किधर है?)', pronunciation: 'Bhool bhoo-lye-yah kidh-uhr high?', context: 'Asking guide or guard' },
+      { phrase: 'Where are authentic Galouti Kebabs?', translation: 'Asli Tunday Kebab kahan milenge? (असली टुंडे कबाब कहाँ मिलेंगे?)', pronunciation: 'Us-lee Toon-day kay-bahb kah-hahn mi-layn-gay?', context: 'Food navigation in Chowk' }
+    ],
+    foodMustEats: [
+      { name: 'Tunday Galouti Kebabs with Ulte Tawe ka Paratha', spot: 'Tunday Kababi (Chowk Old Shop, 800m from Imambara)', tip: 'Melt-in-mouth minced meat infused with 160 secret herbs and spices.' },
+      { name: 'Royal Awadhi Sheermal', spot: 'Old Nazirabad Bakeries', tip: 'Saffron-infused sweet flatbread baked in traditional clay tandoors.' },
+      { name: 'Makhan Malai / Nimish', spot: 'Chowk Morning Vendors (Winter delicacy)', tip: 'Airy whipped dew-chilled milk foam topped with saffron and silver vark.' }
+    ],
+    culturalTips: [
+      'Remove footwear at monument steps; shoe deposit counters are available at the main gate.',
+      'Always enter Bhool Bhulaiya with a certified local guide to avoid getting disoriented inside the 489 passages.',
+      'Photography is permitted; drone videography requires prior district administration clearance.'
+    ],
+    commuteTips: {
+      autoFare: '₹60-90 from Charbagh Railway Station; ₹250 from Chaudhary Charan Singh Airport.',
+      metroAvailable: true,
+      localAdvice: 'Take Lucknow Metro Red Line to Durgapuri or Charbagh, then hop on an electric rickshaw (E-rickshaw) for ₹30.'
+    }
+  },
+  {
+    id: 'spot-lucknow-rumi-darwaza',
+    name: 'Rumi Darwaza & Chowk Heritage Bazaar',
+    city: 'Lucknow',
+    location: { lat: 26.8715, lng: 80.9120 },
+    description: 'The iconic 60-foot Turkish Gate standing as the majestic gateway to Lucknow Old City, adjacent to the historic Chikan embroidery artisan bazaars.',
+    tags: ['Gate', 'Heritage', 'Chikan Embroidery', 'Old City'],
+    openingHours: 'Open 24 Hours (Evening illumination: 06:30 PM - 10:30 PM)',
+    image: 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1000&q=80',
+    googlePlaceId: 'ChIJ_lucknow_rumi_darwaza',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Rumi+Darwaza+Lucknow',
+    monthlyCheckins: 145000,
+    checkinTrend: 'high',
+    bestTimeToVisit: '06:00 PM when spotlights illuminate the grand arch against the twilight sky',
+    catchyLine: 'The 60-foot Turkish Gate that welcomed Nawabs and travelers into the Paris of the East.',
+    bestPic: 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1400&q=85'
+  },
+  {
+    id: 'spot-delhi-qutub',
+    name: 'Qutub Minar & Mehrauli Heritage',
+    city: 'Delhi',
+    location: { lat: 28.5244, lng: 77.1855 },
+    description: '73-meter soaring fluted red sandstone minaret and ancient 4th-century rust-resistant iron pillar surrounded by Delhi Sultanate ruins.',
+    tags: ['UNESCO', 'Heritage', 'Architecture', 'Monuments'],
+    openingHours: '07:00 AM - 08:00 PM',
+    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1000&q=80',
+    googlePlaceId: 'ChIJ_delhi_qutub_minar',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Qutub+Minar+Delhi',
+    monthlyCheckins: 210000,
+    checkinTrend: 'surging',
+    bestTimeToVisit: '08:30 AM morning light on the red sandstone carvings',
+    catchyLine: '73 meters of carved red sandstone and marble charting centuries of Delhi dynasties.'
   }
 ];
 
@@ -324,6 +394,113 @@ export const INITIAL_HOTELS: Hotel[] = [
         perks: ['Breakfast included', 'Temple shuttle', 'Free Wi-Fi']
       }
     ]
+  },
+  {
+    id: 'hotel-vivanta-lucknow',
+    name: 'Vivanta Lucknow (Gomti Nagar)',
+    city: 'Lucknow',
+    address: 'Vipin Khand, Gomti Nagar, Lucknow, Uttar Pradesh 226010',
+    location: { lat: 26.8520, lng: 80.9710 },
+    tier: 'Heritage Luxury',
+    pricePerNight: 5800,
+    commissionRate: 0.15,
+    status: 'verified',
+    allowsIndependentGuides: true,
+    perks: ['Riverfront View', 'Nawabi Dastarkhwan Dining Privileges', 'Heritage Walk Pass', 'Welcome Thandai'],
+    amenities: ['High-Speed Wi-Fi', 'Outdoor Pool', 'Jiva Spa & Wellness', 'Fine Dining Oudhyana', '24h Concierge'],
+    checkinCount: 28400,
+    weeklyCheckins: 720,
+    footfallRank: 1,
+    googlePlaceId: 'ChIJ_vivanta_lucknow',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Vivanta+Lucknow+Gomti+Nagar',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80',
+    businessRegNumber: 'GSTIN09AAAAL8821K1Z9',
+    partnershipModel: 'hybrid',
+    guideReferralKickbackPercent: 7.0,
+    roomTypes: [
+      {
+        id: 'vl-superior',
+        name: 'Deluxe City View Room',
+        pricePerNight: 5800,
+        capacity: 2,
+        description: 'Chic Awadhi decor with modern luxury, king plush bed, and Gomti river skyline views.',
+        perks: ['Breakfast included', 'Welcome high-tea', 'Late checkout']
+      },
+      {
+        id: 'vl-executive-suite',
+        name: 'Nawabi Executive Suite',
+        pricePerNight: 9500,
+        capacity: 3,
+        description: 'Expansive living salon with handcrafted chikan draperies and private butler service.',
+        perks: ['All meals included', 'Spa pass', 'Chowk bazaar guide escort']
+      }
+    ]
+  },
+  {
+    id: 'hotel-clarks-awadh',
+    name: 'Clarks Awadh Heritage Stay',
+    city: 'Lucknow',
+    address: '8 Mahatma Gandhi Marg, Hazratganj, Lucknow, Uttar Pradesh 226001',
+    location: { lat: 26.8620, lng: 80.9320 },
+    tier: 'Heritage Luxury',
+    pricePerNight: 4200,
+    commissionRate: 0.12,
+    status: 'verified',
+    allowsIndependentGuides: true,
+    perks: ['Rooftop Falaknuma Restaurant View', 'Hazratganj Walking Proximity', 'Awadhi Chai Tasting'],
+    amenities: ['Free Wi-Fi', 'Rooftop Lounge', 'Airport Shuttle', 'Business Centre'],
+    checkinCount: 21500,
+    weeklyCheckins: 580,
+    footfallRank: 2,
+    googlePlaceId: 'ChIJ_clarks_awadh_lucknow',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Clarks+Awadh+Lucknow',
+    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80',
+    businessRegNumber: 'GSTIN09BBBCK3312P2Q5',
+    partnershipModel: 'community_pool',
+    guideReferralKickbackPercent: 8.0,
+    roomTypes: [
+      {
+        id: 'ca-heritage-deluxe',
+        name: 'Awadh Heritage Room',
+        pricePerNight: 4200,
+        capacity: 2,
+        description: 'Classic wooden aesthetics overlooking the Gomti river with complimentary breakfast.',
+        perks: ['Breakfast included', 'Rooftop voucher', 'Free Wi-Fi']
+      }
+    ]
+  },
+  {
+    id: 'hotel-lebua-lucknow',
+    name: 'Lebua Lucknow (Heritage Haveli Bungalow)',
+    city: 'Lucknow',
+    address: '19 Mall Avenue, Lucknow, Uttar Pradesh 226001',
+    location: { lat: 26.8490, lng: 80.9410 },
+    tier: 'Boutique Stay',
+    pricePerNight: 4900,
+    commissionRate: 0.14,
+    status: 'verified',
+    allowsIndependentGuides: true,
+    perks: ['Traditional 1936 Art Deco Bungalow', 'Private Courtyard Dining', 'Heritage Architecture Tour'],
+    amenities: ['Outdoor Pool', 'Lush Gardens', 'Heritage Bar 1936', 'Free Wi-Fi'],
+    checkinCount: 16800,
+    weeklyCheckins: 430,
+    footfallRank: 3,
+    googlePlaceId: 'ChIJ_lebua_lucknow',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lebua+Lucknow',
+    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80',
+    businessRegNumber: 'GSTIN09CCCDL9012R3S2',
+    partnershipModel: 'in_house_guides',
+    guideReferralKickbackPercent: 6.5,
+    roomTypes: [
+      {
+        id: 'lebua-courtyard',
+        name: 'Heritage Courtyard Room',
+        pricePerNight: 4900,
+        capacity: 2,
+        description: 'Art deco room opening into sprawling green verandas and terracotta courtyards.',
+        perks: ['Breakfast included', 'Artisan tea tasting', 'Free cancellation']
+      }
+    ]
   }
 ];
 
@@ -450,6 +627,80 @@ export const INITIAL_RESTAURANTS: Restaurant[] = [
       { name: 'Crispy Sarva Pindi with Chutney', price: 110, description: 'Pan-baked spiced rice flour pancake embedded with peanuts and chana dal.', isVeg: true },
       { name: 'Telangana Natu Kodi Country Chicken Curry', price: 290, description: 'Slow cooked in stone mortar spices and fiery red chilies.', isVeg: false }
     ]
+  },
+  {
+    id: 'rest-tunday-chowk',
+    name: 'Tunday Kababi (Chowk Original Since 1905)',
+    city: 'Lucknow',
+    address: '168/6 Phool Wali Gali, Chowk, Lucknow, Uttar Pradesh 226003',
+    location: { lat: 26.8670, lng: 80.9140 },
+    cuisine: ['Awadhi Kebabs', 'Mughlai', 'Galouti Kebab', 'Sheermal'],
+    checkinCount: 245000,
+    weeklyCheckins: 6800,
+    footfallRank: 1,
+    priceForTwo: 350,
+    status: 'verified',
+    openingHours: '11:00 AM - 11:30 PM',
+    seatingCapacity: 80,
+    tags: ['Legendary 1905', 'Melt-in-Mouth', 'Galouti Kebabs', 'UNESCO Heritage Vibe'],
+    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Tunday+Kababi+Chowk+Lucknow',
+    diningVoucherDiscountPercent: 15,
+    diningVoucherPrice: 300,
+    famousDishes: [
+      { name: 'Original Galouti Kebab (Plate of 4)', price: 160, description: 'Legendary recipe made with 160 aromatic herbs; dissolves effortlessly on the palate.', isVeg: false },
+      { name: 'Ulte Tawe Ka Mughlai Paratha', price: 45, description: 'Crisp layered flaky saffron bread baked on inverted cast iron dome.', isVeg: true },
+      { name: 'Awadhi Mutton Korma & Sheermal', price: 220, description: 'Rich saffron cashew gravy with warm fragrant bread.', isVeg: false }
+    ]
+  },
+  {
+    id: 'rest-dastarkhwan-hazratganj',
+    name: 'Dastarkhwan (Traditional Awadhi Kitchen)',
+    city: 'Lucknow',
+    address: '29 BN Road, Near Tulsi Theatre, Lalbagh / Hazratganj, Lucknow 226001',
+    location: { lat: 26.8530, lng: 80.9430 },
+    cuisine: ['Awadhi Biryani', 'Chicken Masala', 'Mutton Boti', 'Shahi Tukda'],
+    checkinCount: 185000,
+    weeklyCheckins: 4900,
+    footfallRank: 2,
+    priceForTwo: 600,
+    status: 'verified',
+    openingHours: '12:30 PM - 11:00 PM',
+    seatingCapacity: 110,
+    tags: ['Signature Dum Biryani', 'Family Dining', 'Rich Gravies'],
+    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=1000&q=80',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Dastarkhwan+Lucknow',
+    diningVoucherDiscountPercent: 15,
+    diningVoucherPrice: 450,
+    famousDishes: [
+      { name: 'Awadhi Mutton Dum Biryani', price: 340, description: 'Fragrant long-grain basmati sealed in clay deg with tender marinated mutton.', isVeg: false },
+      { name: 'Chicken Masala Dastarkhwan Special', price: 280, description: 'Silky rich brown onion and yogurt gravy simmered overnight.', isVeg: false },
+      { name: 'Zafrani Shahi Tukda with Rabri', price: 120, description: 'Crisp ghee-fried bread steeped in cardamom syrup and thick condensed milk.', isVeg: true }
+    ]
+  },
+  {
+    id: 'rest-royal-cafe-hazratganj',
+    name: 'Royal Cafe (Originator of Basket Chaat)',
+    city: 'Lucknow',
+    address: '51 Hazratganj, Opposite Halwasiya Market, Lucknow 226001',
+    location: { lat: 26.8505, lng: 80.9450 },
+    cuisine: ['Street Chaat', 'Basket Chaat', 'North Indian', 'Kulfi Falooda'],
+    checkinCount: 162000,
+    weeklyCheckins: 4200,
+    footfallRank: 3,
+    priceForTwo: 400,
+    status: 'verified',
+    openingHours: '11:00 AM - 11:00 PM',
+    seatingCapacity: 95,
+    tags: ['World-Famous Basket Chaat', 'Hazratganj Heart', 'Vegetarian Delights'],
+    image: 'https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=1000&q=80',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Royal+Cafe+Hazratganj+Lucknow',
+    diningVoucherDiscountPercent: 12,
+    diningVoucherPrice: 300,
+    famousDishes: [
+      { name: 'Monster Basket Chaat (Tokri Chaat)', price: 240, description: 'Deep fried crispy potato basket filled with sprouts, papdi, yoghurt, chutneys, and pomegranate.', isVeg: true },
+      { name: 'Lucknawi Matar Chaat with Ghee', price: 110, description: 'White peas simmered in dry ginger, roasted cumin, and pure cow butter.', isVeg: true }
+    ]
   }
 ];
 
@@ -521,5 +772,39 @@ export const INITIAL_GUIDES: Guide[] = [
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
     badgeVerified: true,
     phone: '+91 98480 11223'
+  },
+  {
+    id: 'guide-salman-qureshi',
+    name: 'Dr. Salman Qureshi (ASI Licensed Awadhi Historian)',
+    languages: ['English', 'Hindi', 'Urdu'],
+    hourlyRate: 550,
+    halfDayRate: 1600,
+    fullDayRate: 3000,
+    photoWalkRate: 1400,
+    verificationId: 'UP-TOUR-LKO-05912',
+    completedToursCount: 462,
+    bio: 'Historian & researcher with 12 years guiding the secret passages of Bhool Bhulaiya, Asafi architecture, and Awadhi royal lineages.',
+    specialties: ['Bhool Bhulaiya Secrets', 'Asafi Architecture', 'Nawabi Lineage', 'Old Lucknow Food Walk'],
+    affiliatedHotelId: 'hotel-vivanta-lucknow',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    badgeVerified: true,
+    phone: '+91 98390 12345'
+  },
+  {
+    id: 'guide-zoya-mirza',
+    name: 'Zoya Mirza (Chikan Craft & Old City Cultural Curator)',
+    languages: ['English', 'Hindi', 'Urdu', 'French'],
+    hourlyRate: 600,
+    halfDayRate: 1700,
+    fullDayRate: 3200,
+    photoWalkRate: 1500,
+    verificationId: 'UP-TOUR-LKO-07841',
+    completedToursCount: 388,
+    bio: 'Artisan textile researcher and cultural custodian specializing in Chowk handicraft guilds, Zardozi embroidery, and Nawabi culinary trails.',
+    specialties: ['Chikan Embroidery Guilds', 'Chowk Culinary Trails', 'Rumi Darwaza Twilight', 'Tunday Kebab Heritage'],
+    affiliatedHotelId: 'hotel-clarks-awadh',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
+    badgeVerified: true,
+    phone: '+91 94500 67890'
   }
 ];

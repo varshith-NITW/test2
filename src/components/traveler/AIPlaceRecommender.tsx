@@ -15,14 +15,15 @@ import {
   Bot,
   Zap,
   Info,
-  ChevronRight
+  ChevronRight,
+  ExternalLink
 } from 'lucide-react';
 import { askGeminiTouristRecommendations, GeminiTouristRecommendation } from '../../services/geminiService';
 
 interface AIPlaceRecommenderProps {
   spots: TouristSpot[];
   selectedSpotId: string;
-  onSelectSpot: (spotId: string) => void;
+  onSelectSpot: (spot: TouristSpot) => void;
   onProceedToProximity: () => void;
 }
 
@@ -56,6 +57,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   const handleAskGemini = async (customQuery?: string) => {
     const q = customQuery !== undefined ? customQuery : aiPrompt;
     setIsGeminiThinking(true);
+    setSelectedCity('All');
     try {
       const res = await askGeminiTouristRecommendations(q, spots);
       setGeminiResult(res);
@@ -272,7 +274,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                   return (
                     <div
                       key={spot.id}
-                      onClick={() => onSelectSpot(spot.id)}
+                      onClick={() => onSelectSpot(spot)}
                       className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                         isSelected
                           ? 'bg-emerald-950/60 border-emerald-400 ring-1 ring-emerald-400 shadow-md'
@@ -306,22 +308,41 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                         </p>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectSpot(spot.id);
-                          onProceedToProximity();
-                        }}
-                        className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
-                            : 'bg-indigo-600/80 hover:bg-indigo-600 text-white'
-                        }`}
-                      >
-                        <span>{isSelected ? 'Selected • Open Proximity Radar' : 'Select Spot & Explore Proximity'}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
+                      {/* Google Maps link & Selection buttons */}
+                      <div className="space-y-2 mt-2 pt-2.5 border-t border-slate-700/60">
+                        {/* Direct Google Maps Navigation Link */}
+                        <a
+                          href={spot.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${spot.name} ${spot.city}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full py-1.5 px-3 rounded-lg bg-slate-700/70 hover:bg-slate-700 hover:text-white text-indigo-200 text-[11px] font-semibold flex items-center justify-between transition-all border border-slate-600/60 group shadow-sm"
+                          title={`Open ${spot.name} in Google Maps`}
+                        >
+                          <span className="flex items-center gap-1.5 truncate">
+                            <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                            <span className="truncate">View on Google Maps</span>
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors shrink-0" />
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectSpot(spot);
+                            onProceedToProximity();
+                          }}
+                          className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+                              : 'bg-indigo-600/80 hover:bg-indigo-600 text-white'
+                          }`}
+                        >
+                          <span>{isSelected ? 'Selected • Open Proximity Radar' : 'Select Spot & Explore Proximity'}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
