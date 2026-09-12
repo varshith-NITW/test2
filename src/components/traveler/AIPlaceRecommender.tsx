@@ -38,24 +38,60 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   const [isGeminiThinking, setIsGeminiThinking] = useState<boolean>(false);
   const [geminiResult, setGeminiResult] = useState<GeminiTouristRecommendation | null>(null);
 
-  const suggestionChips = [
-    { label: '🔥 Top Footfall Check-ins', query: 'highest checkin footfall spots' },
-    { label: '🏛️ Historic Forts & Royal Palaces', query: 'historic forts and royal palaces' },
-    { label: '🛕 UNESCO & Spiritual Temples', query: 'spiritual unesco temples' },
-    { label: '🍲 Legendary Foodie Corridors', query: 'street food and authentic culinary spots' }
+  const popularDestinations = [
+    { name: 'Kochi', icon: '🌴', subtitle: 'Fort Kochi & Backwaters' },
+    { name: 'Lucknow', icon: '🏛️', subtitle: 'Bara Imambara & Nawabi' },
+    { name: 'Delhi', icon: '🕌', subtitle: 'Qutub Minar & Red Fort' },
+    { name: 'Goa', icon: '🏖️', subtitle: 'Calangute & Aguada' },
+    { name: 'Jaipur', icon: '👑', subtitle: 'Hawa Mahal & Amber Fort' },
+    { name: 'Varanasi', icon: '🛕', subtitle: 'Ganga Ghats & Kashi' },
+    { name: 'Hyderabad', icon: '🏰', subtitle: 'Charminar & Golconda' },
+    { name: 'Agra', icon: '🤍', subtitle: 'Taj Mahal & Fort' }
   ];
 
-  // Run initial Gemini recommendation on mount
+  const suggestionChips = [
+    { label: '🌴 Kochi & Kerala', query: 'kochi' },
+    { label: '🏛️ Lucknow & Nawabi', query: 'lucknow' },
+    { label: '🕌 Delhi Heritage', query: 'delhi' },
+    { label: '🏖️ Goa Coastline', query: 'goa' },
+    { label: '👑 Jaipur Pink City', query: 'jaipur' },
+    { label: '🛕 Varanasi Ghats', query: 'varanasi' },
+    { label: '🏰 Hyderabad Forts', query: 'hyderabad' }
+  ];
+
+  // Debounced live search as user types into the destination search bar
   useEffect(() => {
-    let isMounted = true;
-    askGeminiTouristRecommendations('Top verified check-in destinations', spots).then(res => {
-      if (isMounted) setGeminiResult(res);
-    });
-    return () => { isMounted = false; };
-  }, [spots]);
+    const trimmed = aiPrompt.trim();
+    if (!trimmed) {
+      setGeminiResult(null);
+      setIsGeminiThinking(false);
+      return;
+    }
+
+    if (trimmed.length >= 2) {
+      setIsGeminiThinking(true);
+      const timer = setTimeout(async () => {
+        try {
+          const res = await askGeminiTouristRecommendations(trimmed, spots);
+          setGeminiResult(res);
+        } catch (err) {
+          console.warn('Gemini live query error:', err);
+        } finally {
+          setIsGeminiThinking(false);
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [aiPrompt, spots]);
 
   const handleAskGemini = async (customQuery?: string) => {
-    const q = customQuery !== undefined ? customQuery : aiPrompt;
+    const q = (customQuery !== undefined ? customQuery : aiPrompt).trim();
+    if (!q) {
+      setGeminiResult(null);
+      setIsGeminiThinking(false);
+      return;
+    }
     setIsGeminiThinking(true);
     setSelectedCity('All');
     try {
@@ -73,20 +109,15 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
     handleAskGemini(query);
   };
 
-  // Determine spots to display
-  const displaySpots = (geminiResult && geminiResult.matchedSpots.length > 0)
+  // Determine spots to display - strictly empty if no search query executed!
+  const displaySpots = (geminiResult && geminiResult.matchedSpots && geminiResult.matchedSpots.length > 0)
     ? geminiResult.matchedSpots.filter(spot => {
         if (selectedCity !== 'All' && spot.city.toLowerCase() !== selectedCity.toLowerCase()) {
           return false;
         }
         return true;
       })
-    : spots.filter(spot => {
-        if (selectedCity !== 'All' && spot.city.toLowerCase() !== selectedCity.toLowerCase()) {
-          return false;
-        }
-        return true;
-      }).sort((a, b) => b.monthlyCheckins - a.monthlyCheckins);
+    : [];
 
   return (
     <div className="space-y-8">
@@ -195,8 +226,83 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
         </div>
       </div>
 
+      {/* Thinking State */}
+      {isGeminiThinking && (
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-8 sm:p-12 text-center border border-indigo-800/60 shadow-xl space-y-3">
+          <div className="w-9 h-9 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto text-indigo-400" />
+          <h3 className="text-base sm:text-lg font-bold text-white">
+            Gemini 2.5 Flash is analyzing verified check-in footfalls for &ldquo;{aiPrompt}&rdquo;...
+          </h3>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            Evaluating physical GPS &amp; Google Place check-in velocity &bull; Bypassing manipulated star ratings
+          </p>
+        </div>
+      )}
+
+      {/* Initial Empty State - before traveler searches */}
+      {!isGeminiThinking && !geminiResult && (
+        <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 sm:p-12 border border-slate-800 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto shadow-inner">
+            <Compass className="w-7 h-7" />
+          </div>
+          <div className="max-w-lg mx-auto">
+            <h3 className="text-lg sm:text-xl font-bold text-white">
+              Search Any Destination to View Verified Places
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1.5 leading-relaxed">
+              Type any tourist city above (e.g., <strong className="text-emerald-400">Kochi</strong>, <strong className="text-indigo-400">Lucknow</strong>, <strong className="text-sky-400">Goa</strong>, <strong className="text-amber-400">Delhi</strong>) or click a destination below to discover authentic spots ranked strictly by real check-in footfalls.
+            </p>
+          </div>
+
+          {/* Quick Popular Destination Badges */}
+          <div className="pt-2">
+            <div className="text-xs text-slate-400 font-semibold mb-3">Popular Destinations (Click to search):</div>
+            <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+              {popularDestinations.map((dest, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleChipClick(dest.name)}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-900/50 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700 hover:border-indigo-500 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.02]"
+                >
+                  <span>{dest.icon}</span>
+                  <span>{dest.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No Results Found State */}
+      {!isGeminiThinking && geminiResult && displaySpots.length === 0 && (
+        <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 sm:p-12 border border-slate-800 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+            <MapPin className="w-6 h-6" />
+          </div>
+          <h3 className="text-base sm:text-lg font-bold text-white">
+            No tourist places found matching &ldquo;{geminiResult.query}&rdquo;
+          </h3>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            {geminiResult.geminiReasoning || 'Try searching for a destination like Kochi, Lucknow, Delhi, Goa, Jaipur, or Varanasi.'}
+          </p>
+          <div className="pt-2 flex flex-wrap justify-center gap-2">
+            {popularDestinations.slice(0, 5).map((dest, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleChipClick(dest.name)}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition-colors cursor-pointer"
+              >
+                {dest.icon} {dest.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Live Gemini AI Intelligence Response Card */}
-      {geminiResult && (
+      {!isGeminiThinking && geminiResult && displaySpots.length > 0 && (
         <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 sm:p-6 border border-indigo-800/60 shadow-xl space-y-4">
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-900/60 pb-3">

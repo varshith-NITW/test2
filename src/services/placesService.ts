@@ -76,6 +76,60 @@ export const GLOBAL_DESTINATIONS: Record<string, {
       }
     ]
   },
+  'kochi': {
+    name: 'Fort Kochi & Chinese Fishing Nets',
+    city: 'Kochi',
+    country: 'India',
+    location: { lat: 9.9658, lng: 76.2424 },
+    category: 'Colonial Maritime Heritage & Backwaters',
+    monthlyCheckins: 215000,
+    highlight: '14th-century cantilevered Chinese fishing nets, Portuguese colonial streets, and spice trading waterways',
+    catchyLine: 'Giant Chinese fishing nets silhouette sunset waters where spice caravans and Portuguese galleons once anchored.',
+    bestPic: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=1400&q=85',
+    survivalPhrases: [
+      { phrase: 'Malayalam Polite Greeting', translation: 'Namaskaram (നമസ്കാരം)', pronunciation: 'Nah-mus-kah-rum', context: 'Universal polite greeting' },
+      { phrase: 'Where is the ferry terminal?', translation: 'Jetti / Ferry evideyaanu? (ജെട്ടി എവിടെയാണ്?)', pronunciation: 'Jetty eh-vi-day-ah-noo?', context: 'Ferry commute' },
+      { phrase: 'Where can I eat fresh fish pollichathu?', translation: 'Nalla Meen Pollichathu evide kittum? (നല്ല മീൻ പൊള്ളിച്ചത് എവിടെ കിട്ടും?)', pronunciation: 'Nul-luh Meen Pol-li-chuh-thoo eh-vi-day kit-toom?', context: 'Seafood recommendation' },
+      { phrase: 'Thank you very much', translation: 'Valare Nandi (വളരെ നന്ദി)', pronunciation: 'Vuh-luh-ray Nun-dhee', context: 'Expressing gratitude' }
+    ],
+    foodMustEats: [
+      { name: 'Karimeen Pollichathu (Pearl Spot in Banana Leaf)', spot: 'Paragon Restaurant / Seagull (Fort Kochi)', tip: 'Marinated in shallots, coconut oil and spicy red pepper, slow roasted inside plantain leaf.' },
+      { name: 'Kerala Appam with Tender Mutton Stew', spot: 'Kashi Art Cafe & Heritage Kitchen', tip: 'Fermented lace rice hoppers paired with rich coconut milk meat stew.' },
+      { name: 'Malabar Fish Curry & Steamed Matta Rice', spot: 'Oceanos Seafood Restaurant (Elphinstone Rd)', tip: 'Infused with smoky Kudampuli (Malabar kokum tamarind).' }
+    ],
+    culturalTips: [
+      'Fort Kochi and Mattancherry are best explored on foot or bicycle to admire 500-year-old colonial facades.',
+      'Remove shoes before entering the Paradesi Synagogue and Mattancherry Palace.',
+      'Always agree on auto fares or use Kerala Savari / Uber auto for transparent fares.'
+    ],
+    commuteTips: {
+      autoFare: '₹40-70 within Fort Kochi; ₹10 Ro-Ro passenger ferry from Vypeen / Ernakulam.',
+      metroAvailable: true,
+      localAdvice: 'Take the scenic Kochi Water Metro ferry from High Court Jetty to Fort Kochi for ₹20 — faster and far more scenic than road traffic.'
+    },
+    languages: ['English', 'Malayalam', 'Hindi', 'Tamil'],
+    hotelThemes: [
+      { name: 'Brunton Boatyard - CGH Earth', tier: 'Heritage Luxury', basePrice: 6800, perks: ['Historic Harbor Front', 'Sunset Pier Dining', 'Ayurvedic Spa Pass'], image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80' },
+      { name: 'Old Harbour Hotel Heritage Stay', tier: 'Boutique Stay', basePrice: 4800, perks: ['300-Year-Old Dutch Villa', 'Private Garden Pool', 'Seafood Tasting Voucher'], image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80' },
+      { name: 'Forte Kochi Colonial Retreat', tier: 'Heritage Luxury', basePrice: 5200, perks: ['Jew Town Walking Escort', 'Princess Street Proximity', 'Welcome Spice Chai'], image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80' }
+    ],
+    guideProfiles: [
+      { name: 'Ananthan Pillai', title: 'Maritime Spice Route & Portuguese Era Historian', specialties: ['Chinese Fishing Nets', 'Vasco da Gama Trail', 'Jew Town Spice Warehouses'], languages: ['English', 'Malayalam', 'Hindi', 'French'], fee: 1600 },
+      { name: 'Mary Varghese', title: 'Fort Kochi Art Biennial & Culinary Walk Curator', specialties: ['Kashi Art Corridor', 'Malabar Seafood Secrets', 'Mattancherry Palace Murals'], languages: ['English', 'Malayalam', 'Hindi', 'German'], fee: 1400 }
+    ],
+    itineraryDays: [
+      {
+        title: 'Colonial Fort Kochi & Sunset Chinese Nets',
+        activities: [
+          '08:30 AM: Morning stroll along Princess Street and St. Francis Church (Vasco da Gama tomb)',
+          '11:00 AM: Explore 16th-century Hindu murals at Mattancherry Palace and antique shops of Jew Town',
+          '01:30 PM: Authentic Karimeen Pollichathu seafood feast at waterfront partner kitchen',
+          '05:30 PM: Sunset photography session at the cantilevered Chinese Fishing Nets'
+        ],
+        localTip: 'Sunset between 05:30 PM and 06:15 PM casts iconic golden silhouettes through the net rigging.'
+      }
+    ]
+  },
   'hyderabad': {
     name: 'Charminar & Old City Bazaars',
     city: 'Hyderabad',
