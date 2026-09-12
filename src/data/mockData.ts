@@ -48,7 +48,7 @@ export const INITIAL_TOURIST_SPOTS: TouristSpot[] = [
     description: 'A colossal 12th-century granite fortress citadel famed for acoustic clapping porticos, diamond vaults, and 360-degree sunset panoramas.',
     tags: ['Heritage', 'Citadel', 'Acoustics', 'Sunset View'],
     openingHours: '09:00 AM - 05:30 PM',
-    image: 'https://images.unsplash.com/photo-1606298855672-3efb620b7537?auto=format&fit=crop&w=1000&q=80',
+    image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1000&q=80',
     googlePlaceId: 'ChIJ49K4vT6XyzsR3d001q_abc',
     googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Golconda+Fort+Hyderabad',
     monthlyCheckins: 168000,

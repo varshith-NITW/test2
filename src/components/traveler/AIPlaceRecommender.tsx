@@ -252,150 +252,86 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                 <p className="text-slate-300 leading-normal">{geminiResult.insiderTip}</p>
               </div>
             </div>
+
+            {/* Gemini Recommended Places Grid inside Gemini Card */}
+            <div className="pt-3 border-t border-indigo-900/50">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Gemini Recommended Destinations (Ranked by Check-in Footfalls):</span>
+                </span>
+                <span className="text-[11px] text-emerald-400 font-semibold">
+                  Zero Star-Rating Bias &bull; Real Footfalls
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {displaySpots.map((spot, idx) => {
+                  const isSelected = spot.id === selectedSpotId;
+
+                  return (
+                    <div
+                      key={spot.id}
+                      onClick={() => onSelectSpot(spot.id)}
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-emerald-950/60 border-emerald-400 ring-1 ring-emerald-400 shadow-md'
+                          : 'bg-slate-800/80 border-slate-700/80 hover:border-indigo-400 hover:bg-slate-800'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-start gap-3 mb-2.5">
+                          <img
+                            src={spot.image}
+                            alt={spot.name}
+                            className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-700"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[10px] text-indigo-300 font-medium">{spot.city}</span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                #{idx + 1}
+                              </span>
+                            </div>
+                            <h4 className="text-xs font-bold text-white truncate mt-0.5">{spot.name}</h4>
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-amber-300 mt-1">
+                              <Flame className="w-3 h-3 text-amber-400 shrink-0" />
+                              <span>{spot.monthlyCheckins.toLocaleString()} Check-ins/mo</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="text-[11px] text-slate-300 line-clamp-2 leading-relaxed mb-3">
+                          {spot.description}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectSpot(spot.id);
+                          onProceedToProximity();
+                        }}
+                        className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+                            : 'bg-indigo-600/80 hover:bg-indigo-600 text-white'
+                        }`}
+                      >
+                        <span>{isSelected ? 'Selected • Open Proximity Radar' : 'Select Spot & Explore Proximity'}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
 
         </div>
       )}
-
-      {/* Tourist Spots Grid (Ranked Strictly by Check-Ins) */}
-      <div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
-          <div>
-            <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-              <span>Destinations Recommended by Gemini</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
-                {displaySpots.length} High-Footfall Places
-              </span>
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Ranked in real-time by total monthly verified physical visitor check-ins (Zero star rating bias)
-            </p>
-          </div>
-
-          {/* Quick City Filter */}
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            {['All', 'Hyderabad', 'Warangal', 'Jaipur'].map(city => (
-              <button
-                key={city}
-                type="button"
-                onClick={() => setSelectedCity(city)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  selectedCity === city
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {city}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displaySpots.map((spot, idx) => {
-            const isSelected = spot.id === selectedSpotId;
-
-            return (
-              <div
-                key={spot.id}
-                onClick={() => onSelectSpot(spot.id)}
-                className={`group bg-white rounded-2xl border transition-all cursor-pointer overflow-hidden flex flex-col justify-between ${
-                  isSelected
-                    ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg'
-                    : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
-                }`}
-              >
-                <div>
-                  {/* Spot Image with Badges */}
-                  <div className="relative h-48 w-full overflow-hidden bg-slate-100">
-                    <img
-                      src={spot.image}
-                      alt={spot.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-
-                    {/* Check-In Metric Badge */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md text-white border border-white/20 shadow-md">
-                      <Flame className="w-3.5 h-3.5 text-amber-400" />
-                      <span className="text-xs font-bold">{spot.monthlyCheckins.toLocaleString()}</span>
-                      <span className="text-[10px] text-slate-300">Check-ins/mo</span>
-                    </div>
-
-                    {/* Gemini Footfall Rank Badge */}
-                    <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-emerald-500 text-white font-black text-xs flex items-center gap-1 shadow-md">
-                      <Sparkles className="w-3 h-3 text-amber-200" />
-                      <span>#{idx + 1}</span>
-                    </div>
-
-                    {/* Spot Title Over Image */}
-                    <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <div className="flex items-center gap-1 text-[11px] text-emerald-300 font-medium mb-0.5">
-                        <MapPin className="w-3 h-3" />
-                        <span>{spot.city}</span>
-                      </div>
-                      <h4 className="text-base font-bold truncate">{spot.name}</h4>
-                    </div>
-                  </div>
-
-                  {/* Spot Details */}
-                  <div className="p-4 space-y-3">
-                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                      {spot.description}
-                    </p>
-
-                    {/* Catchy Local Line */}
-                    {spot.catchyLine && (
-                      <div className="text-[11px] italic text-slate-500 border-l-2 border-emerald-500 pl-2.5">
-                        &ldquo;{spot.catchyLine}&rdquo;
-                      </div>
-                    )}
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {spot.tags.slice(0, 3).map((tag, tIdx) => (
-                        <span
-                          key={tIdx}
-                          className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-medium"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Best Time to Visit */}
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                      <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate">{spot.bestTimeToVisit}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Action Footer */}
-                <div className="p-4 pt-0">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectSpot(spot.id);
-                      onProceedToProximity();
-                    }}
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      isSelected
-                        ? 'bg-emerald-600 text-white shadow-md hover:bg-emerald-700'
-                        : 'bg-slate-100 text-slate-800 hover:bg-emerald-50 hover:text-emerald-700'
-                    }`}
-                  >
-                    <span>{isSelected ? 'Spot Selected &bull; Open Radar' : 'Select Spot & Explore Proximity'}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
     </div>
   );
