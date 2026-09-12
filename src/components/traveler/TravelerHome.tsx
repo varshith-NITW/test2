@@ -51,6 +51,8 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
   const [selectedGuidePackage, setSelectedGuidePackage] = useState<GuidePackageType>('half_day');
   const [nights, setNights] = useState<number>(2);
+  const [affordabilityTier, setAffordabilityTier] = useState<'budget' | 'value' | 'luxury'>('budget');
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string>('AFFORDABLEINDIA');
 
   // Modals
   const [showRazorpayModal, setShowRazorpayModal] = useState<boolean>(false);
@@ -174,7 +176,11 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           guide={selectedGuide}
           guidePackage={selectedGuidePackage}
           onBackToRadar={() => setCurrentStep('step2_proximity')}
-          onProceedToRazorpay={() => setShowRazorpayModal(true)}
+          onProceedToRazorpay={(tier, promo) => {
+            if (tier) setAffordabilityTier(tier);
+            if (promo) setAppliedPromoCode(promo);
+            setShowRazorpayModal(true);
+          }}
         />
       )}
 
@@ -188,6 +194,8 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           restaurantPass={selectedRestaurantPass}
           selectedGuide={selectedGuide}
           selectedPackage={selectedGuidePackage}
+          affordabilityTier={affordabilityTier}
+          appliedPromoCode={appliedPromoCode}
           onClose={() => setShowRazorpayModal(false)}
           onBookingConfirmed={handleBookingConfirmed}
         />

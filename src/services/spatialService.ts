@@ -104,11 +104,21 @@ export function filterGuidesByProximity(
   nearbyHotels: Hotel[]
 ): Array<{ guide: Guide; distanceKm: number; affiliatedWithNearbyHotel: boolean }> {
   const nearbyHotelIds = new Set(nearbyHotels.map(h => h.id));
+  const spotCity = (spot.city || '').toLowerCase();
+
+  // Prioritize certified guides belonging to the selected spot's city or affiliated hotels
+  const cityMatchingGuides = guides.filter(g => {
+    const bioMatch = g.bio.toLowerCase().includes(spotCity);
+    const verifMatch = g.verificationId.toLowerCase().includes(spotCity.slice(0, 3));
+    const nameMatch = g.name.toLowerCase().includes(spotCity);
+    const hotelMatch = g.affiliatedHotelId ? nearbyHotelIds.has(g.affiliatedHotelId) : false;
+    return bioMatch || verifMatch || nameMatch || hotelMatch;
+  });
+
+  const candidates = cityMatchingGuides.length > 0 ? cityMatchingGuides : guides;
   
-  return guides.map((guide, idx) => {
-    // Determine proximity based on affiliated hotel or proximity zone
+  return candidates.map((guide, idx) => {
     const isAffiliated = guide.affiliatedHotelId ? nearbyHotelIds.has(guide.affiliatedHotelId) : false;
-    // Proximate distance simulation relative to spot
     const baseDist = isAffiliated ? 0.6 : (idx * 0.9 + 0.4);
     const distanceKm = Math.round(baseDist * 10) / 10;
     

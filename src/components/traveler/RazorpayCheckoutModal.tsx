@@ -39,11 +39,13 @@ interface RazorpayCheckoutModalProps {
   restaurantPass: RestaurantPassSelection | null;
   selectedGuide: Guide | null;
   selectedPackage: GuidePackageType;
+  affordabilityTier?: 'budget' | 'value' | 'luxury';
+  appliedPromoCode?: string;
   onClose: () => void;
   onBookingConfirmed: (booking: Booking) => void;
 }
 
-type RazorpayMethod = 'upi' | 'card' | 'netbanking' | 'qr';
+type RazorpayMethod = 'upi' | 'card' | 'netbanking' | 'qr' | 'emi';
 
 export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
   spot,
@@ -53,6 +55,8 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
   restaurantPass,
   selectedGuide,
   selectedPackage,
+  affordabilityTier = 'budget',
+  appliedPromoCode = 'AFFORDABLEINDIA',
   onClose,
   onBookingConfirmed
 }) => {
@@ -67,6 +71,7 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
   const [cardExpiry, setCardExpiry] = useState<string>('08/28');
   const [cardCvv, setCardCvv] = useState<string>('821');
   const [selectedBank, setSelectedBank] = useState<string>('HDFC Bank');
+  const [selectedEmiTenure, setSelectedEmiTenure] = useState<number>(3);
 
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingStep, setProcessingStep] = useState<string>('');
@@ -75,7 +80,7 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
   // Razorpay order ID
   const [razorpayOrderId] = useState<string>(() => `order_RPZ_${Math.floor(10000000 + Math.random() * 90000000)}`);
 
-  // Split calculation
+  // Split calculation with Maximum Affordability Engine
   const split: SplitBreakdown = calculateSplitBreakdown({
     hotel,
     nights,
@@ -83,7 +88,10 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
     guide: selectedGuide,
     guidePackageType: selectedPackage,
     restaurantPass,
-    applyWebsiteDiscount: true
+    applyWebsiteDiscount: true,
+    affordabilityTier,
+    appliedPromoCode,
+    enableMaxDiscount: true
   });
 
   const getPackageTitle = (type: GuidePackageType) => {
@@ -255,6 +263,14 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
                       <strong className="text-emerald-400 truncate block">{selectedGuide.name}</strong>
                     </div>
                   )}
+                  <div>
+                    <span className="text-slate-400 text-[10px] block">Affordability Tier</span>
+                    <strong className="text-blue-400 uppercase">{split.affordabilityTier || 'Budget'} Plan</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[10px] block">Traveler Direct Savings</span>
+                    <strong className="text-emerald-400">₹{split.travelerSavingsAmount?.toLocaleString() || '0'} ({split.travelerSavingsPercent || 0}% vs OTA)</strong>
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
@@ -286,7 +302,27 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
             </div>
           ) : (
             /* View 2: Razorpay Payment Form */
-            <div className="space-y-6">
+            <div className="space-y-5">
+
+              {/* Affordability Discount Banner */}
+              <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-300/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <div>
+                    <span className="font-extrabold text-slate-900 block">
+                      Direct Affordability Bundle Active ({split.affordabilityTier?.toUpperCase()} Tier)
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Direct hotel markdown, food voucher, and guide escrow save you <strong className="text-emerald-700">₹{split.travelerSavingsAmount?.toLocaleString()} ({split.travelerSavingsPercent}% OFF vs OTAs)</strong>
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-black text-[11px]">
+                    SAVE {split.websiteDiscountPercent}%
+                  </span>
+                </div>
+              </div>
 
               {/* Guest Details */}
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
@@ -316,59 +352,72 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
                 </div>
               </div>
 
-              {/* Payment Methods Tabs */}
+              {/* Payment Methods Tabs (5 Tabs including No-Cost EMI) */}
               <div>
                 <span className="text-xs font-bold text-slate-700 block mb-2">Select Payment Method:</span>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('upi')}
-                    className={`p-3 rounded-xl border text-center transition-all ${
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
                       paymentMethod === 'upi'
                         ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold shadow-sm'
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <Smartphone className="w-5 h-5 mx-auto mb-1 text-blue-600" />
+                    <Smartphone className="w-4 h-4 mx-auto mb-1 text-blue-600" />
                     <span className="text-[11px] block">UPI / Apps</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('card')}
-                    className={`p-3 rounded-xl border text-center transition-all ${
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
                       paymentMethod === 'card'
                         ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold shadow-sm'
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <CreditCard className="w-5 h-5 mx-auto mb-1 text-blue-600" />
+                    <CreditCard className="w-4 h-4 mx-auto mb-1 text-blue-600" />
                     <span className="text-[11px] block">Cards</span>
                   </button>
 
                   <button
                     type="button"
+                    onClick={() => setPaymentMethod('emi')}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                      paymentMethod === 'emi'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-900 font-bold shadow-sm ring-1 ring-emerald-400'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4 mx-auto mb-1 text-emerald-600" />
+                    <span className="text-[11px] block font-bold text-emerald-700">0% EMI</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setPaymentMethod('qr')}
-                    className={`p-3 rounded-xl border text-center transition-all ${
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
                       paymentMethod === 'qr'
                         ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold shadow-sm'
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <QrCode className="w-5 h-5 mx-auto mb-1 text-blue-600" />
+                    <QrCode className="w-4 h-4 mx-auto mb-1 text-blue-600" />
                     <span className="text-[11px] block">Scan QR</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('netbanking')}
-                    className={`p-3 rounded-xl border text-center transition-all ${
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
                       paymentMethod === 'netbanking'
                         ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold shadow-sm'
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <Building2 className="w-5 h-5 mx-auto mb-1 text-blue-600" />
+                    <Building2 className="w-4 h-4 mx-auto mb-1 text-blue-600" />
                     <span className="text-[11px] block">Netbanking</span>
                   </button>
                 </div>
@@ -439,9 +488,63 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
                   </div>
                 )}
 
+                {paymentMethod === 'emi' && (
+                  <div className="space-y-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-800">Select No-Cost EMI Plan:</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">0% Interest Guarantee</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEmiTenure(3)}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          selectedEmiTenure === 3
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold ring-1 ring-emerald-400'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="text-xs font-black">3 Months No-Cost EMI</div>
+                        <div className="text-base font-black text-emerald-700 mt-1">₹{Math.round(split.totalCharged / 3).toLocaleString()}/mo</div>
+                        <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">₹0 Interest &bull; ₹0 Processing Fee</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEmiTenure(6)}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          selectedEmiTenure === 6
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold ring-1 ring-emerald-400'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="text-xs font-black">6 Months No-Cost EMI</div>
+                        <div className="text-base font-black text-emerald-700 mt-1">₹{Math.round(split.totalCharged / 6).toLocaleString()}/mo</div>
+                        <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">₹0 Interest &bull; ₹0 Processing Fee</div>
+                      </button>
+                    </div>
+
+                    <div className="pt-2">
+                      <label className="text-[11px] text-slate-500 block mb-1">Eligible Bank Partner:</label>
+                      <select
+                        value={selectedBank}
+                        onChange={(e) => setSelectedBank(e.target.value)}
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white"
+                      >
+                        <option value="HDFC Bank">HDFC Bank Credit/Debit Card EMI</option>
+                        <option value="ICICI Bank">ICICI Bank Instant Cardless EMI</option>
+                        <option value="State Bank of India">SBI Card No-Cost EMI</option>
+                        <option value="Axis Bank">Axis Bank Fast EMI</option>
+                        <option value="Kotak Mahindra">Kotak Smart EMI</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {paymentMethod === 'qr' && (
                   <div className="flex flex-col items-center justify-center p-3 text-center">
-                    <div className="w-40 h-40 bg-white p-2 rounded-2xl border-2 border-slate-300 shadow-md flex items-center justify-center mb-2">
+                    <div className="w-36 h-36 bg-white p-2 rounded-2xl border-2 border-slate-300 shadow-md flex items-center justify-center mb-2">
                       <QrCode className="w-32 h-32 text-slate-900" />
                     </div>
                     <span className="text-xs font-bold text-slate-800">Scan & Pay ₹{split.totalCharged.toLocaleString()}</span>
@@ -470,6 +573,14 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Multi-Party Escrow Transparency Pill */}
+              <div className="bg-slate-100 border border-slate-200 rounded-xl p-2.5 flex items-center justify-between text-[11px] text-slate-600">
+                <span className="font-semibold">Razorpay Smart Escrow Split:</span>
+                <span className="font-mono">
+                  🏨 ₹{split.hotelNet.toLocaleString()} &bull; 🍽️ ₹{split.restaurantNet.toLocaleString()} &bull; 🧭 ₹{split.guideNet.toLocaleString()}
+                </span>
               </div>
 
               {/* Processing Animation */}

@@ -9,15 +9,23 @@ export interface SplitCalculationParams {
   customGuideFee?: number;
   restaurantPass?: RestaurantPassSelection | null;
   applyWebsiteDiscount?: boolean;
+  affordabilityTier?: 'budget' | 'value' | 'luxury';
+  appliedPromoCode?: string;
+  enableMaxDiscount?: boolean;
 }
 
 /**
- * Calculates real-time multi-party split payout breakdown with Direct Website Discount:
- * - Hotel Stay Payout
+ * Calculates real-time multi-party split payout breakdown with Maximum Affordability Discount:
+ * - Hotel Stay Direct Partner Payout
  * - Authentic Restaurant Dining Voucher
  * - Certified Local Guide Direct Fee (90% direct to guide)
  * - Platform Net Revenue & Taxes
- * - Exclusive Website Booking Discount: Flat 15% single, 20% for 2 bundled, 25% for complete 3-in-1 ecosystem!
+ * - Maximum Possible Discount Engine:
+ *   * Direct Hotel Partnership Markdown (bypassing 22% OTA commissions)
+ *   * Restaurant Voucher Credit
+ *   * Guide Community Group Escrow
+ *   * Instant Platform Subsidy Promo (AFFORDABLEINDIA)
+ *   * Saves up to 40% - 48% compared to MakeMyTrip / Booking.com!
  */
 export function calculateSplitBreakdown({
   hotel,
@@ -27,7 +35,10 @@ export function calculateSplitBreakdown({
   guidePackageType,
   customGuideFee,
   restaurantPass,
-  applyWebsiteDiscount = true
+  applyWebsiteDiscount = true,
+  affordabilityTier = 'budget',
+  appliedPromoCode = 'AFFORDABLEINDIA',
+  enableMaxDiscount = true
 }: SplitCalculationParams): SplitBreakdown {
   const hotelGrossOriginal = selectedRoomPrice * Math.max(1, nights);
 
@@ -56,22 +67,58 @@ export function calculateSplitBreakdown({
   }
 
   const restaurantGrossOriginal = restaurantPass ? restaurantPass.totalCost : 0;
-
   const originalTotal = hotelGrossOriginal + guideGrossOriginal + restaurantGrossOriginal;
 
-  // Super Bundle Discount Calculation:
-  // 1 item = 15%, 2 items = 20%, 3 items (Hotel + Restaurant + Guide) = 25% Super Discount
-  let bundleItemsCount = 1; // Hotel is base
+  // Big Tech OTA comparison (MakeMyTrip / Booking.com rack rate + street guide markup)
+  const otaMarketPrice = Math.round(
+    hotelGrossOriginal * 1.28 + 
+    guideGrossOriginal * 1.25 + 
+    (restaurantPass ? restaurantPass.totalWorth * 1.15 : 0)
+  );
+
+  // Super Bundle items count
+  let bundleItemsCount = 1; // Hotel base
   if (guide && guidePackageType) bundleItemsCount++;
   if (restaurantPass && restaurantPass.totalCost > 0) bundleItemsCount++;
 
-  let websiteDiscountPercent = 15;
-  if (bundleItemsCount === 2) websiteDiscountPercent = 20;
-  if (bundleItemsCount >= 3) websiteDiscountPercent = 25;
+  // Base discount percent tailored to affordability tier
+  let baseDiscountPercent = 20;
+  if (affordabilityTier === 'budget') {
+    baseDiscountPercent = bundleItemsCount >= 3 ? 35 : bundleItemsCount === 2 ? 30 : 25;
+  } else if (affordabilityTier === 'value') {
+    baseDiscountPercent = bundleItemsCount >= 3 ? 28 : bundleItemsCount === 2 ? 22 : 18;
+  } else if (affordabilityTier === 'luxury') {
+    baseDiscountPercent = bundleItemsCount >= 3 ? 22 : bundleItemsCount === 2 ? 18 : 15;
+  } else {
+    baseDiscountPercent = bundleItemsCount >= 3 ? 28 : bundleItemsCount === 2 ? 22 : 18;
+  }
 
-  const websiteDiscountAmount = applyWebsiteDiscount
-    ? Math.round(originalTotal * (websiteDiscountPercent / 100))
+  if (enableMaxDiscount) {
+    baseDiscountPercent = Math.max(baseDiscountPercent, 35);
+  }
+
+  // Promo code / direct platform subsidy
+  const promoNormalized = (appliedPromoCode || '').trim().toUpperCase();
+  let platformSubsidyAmount = 0;
+  if (enableMaxDiscount || promoNormalized === 'AFFORDABLEINDIA' || promoNormalized === 'MAXDISCOUNT') {
+    platformSubsidyAmount = Math.min(Math.round(originalTotal * 0.08), 650);
+  } else if (promoNormalized === 'STUDENT500' || promoNormalized === 'EXPLORE') {
+    platformSubsidyAmount = 400;
+  }
+
+  let websiteDiscountAmount = applyWebsiteDiscount
+    ? Math.round(originalTotal * (baseDiscountPercent / 100)) + platformSubsidyAmount
     : 0;
+
+  // Cap at 45% to protect partner payouts
+  const maxDiscountCap = Math.round(originalTotal * 0.45);
+  if (websiteDiscountAmount > maxDiscountCap) {
+    websiteDiscountAmount = maxDiscountCap;
+  }
+
+  const effectiveDiscountPercent = originalTotal > 0
+    ? Math.round((websiteDiscountAmount / originalTotal) * 100)
+    : baseDiscountPercent;
 
   const totalCharged = Math.max(0, originalTotal - websiteDiscountAmount);
 
@@ -83,6 +130,11 @@ export function calculateSplitBreakdown({
     ? Math.round(websiteDiscountAmount * (restaurantGrossOriginal / originalTotal))
     : 0;
   const guideDiscountShare = Math.max(0, websiteDiscountAmount - hotelDiscountShare - restaurantDiscountShare);
+
+  const travelerSavingsAmount = Math.max(0, otaMarketPrice - totalCharged);
+  const travelerSavingsPercent = otaMarketPrice > 0
+    ? Math.round((travelerSavingsAmount / otaMarketPrice) * 100)
+    : 0;
 
   // Hotel Split
   const hotelGross = Math.max(0, hotelGrossOriginal - hotelDiscountShare);
@@ -117,8 +169,17 @@ export function calculateSplitBreakdown({
   return {
     totalCharged,
     originalTotal,
-    websiteDiscountPercent,
+    websiteDiscountPercent: effectiveDiscountPercent,
     websiteDiscountAmount,
+    affordabilityTier,
+    hotelDiscountAmount: hotelDiscountShare,
+    restaurantDiscountAmount: restaurantDiscountShare,
+    guideDiscountAmount: guideDiscountShare,
+    platformSubsidyAmount,
+    otaMarketPrice,
+    travelerSavingsAmount,
+    travelerSavingsPercent,
+    appliedPromoCode: promoNormalized,
     hotelGross,
     hotelGrossOriginal,
     hotelPlatformCut,

@@ -13,6 +13,7 @@ import {
   filterRestaurantsByRadius, 
   filterGuidesByProximity 
 } from '../../services/spatialService';
+import { generateProximityInventoryForSpot } from '../../services/placesService';
 import { InteractiveMap } from '../common/InteractiveMap';
 import { 
   Building2, 
@@ -69,27 +70,71 @@ export const ProximityRadarView: React.FC<ProximityRadarViewProps> = ({
   const [radiusKm, setRadiusKm] = useState<number>(6.0);
   const [activeCategory, setActiveCategory] = useState<'all' | 'hotels' | 'restaurants' | 'guides'>('all');
 
+  // Dynamic fallback inventory ensures properties are always guaranteed for this destination
+  const dynamicFallback = useMemo(() => {
+    return generateProximityInventoryForSpot(selectedSpot);
+  }, [selectedSpot]);
+
+  // Merge parent state with spot-specific inventory
+  const allAvailableHotels = useMemo(() => {
+    const combined = [...hotels];
+    for (const h of dynamicFallback.hotels) {
+      if (!combined.some(existing => existing.id === h.id)) {
+        combined.push(h);
+      }
+    }
+    return combined;
+  }, [hotels, dynamicFallback]);
+
+  const allAvailableRestaurants = useMemo(() => {
+    const combined = [...restaurants];
+    for (const r of dynamicFallback.restaurants) {
+      if (!combined.some(existing => existing.id === r.id)) {
+        combined.push(r);
+      }
+    }
+    return combined;
+  }, [restaurants, dynamicFallback]);
+
+  const allAvailableGuides = useMemo(() => {
+    const combined = [...guides];
+    for (const g of dynamicFallback.guides) {
+      if (!combined.some(existing => existing.id === g.id)) {
+        combined.push(g);
+      }
+    }
+    return combined;
+  }, [guides, dynamicFallback]);
+
   // Compute proximity items strictly based on selected tourist spot location
   const nearbyHotels = useMemo(() => {
-    return filterHotelsByRadius(selectedSpot, hotels, radiusKm);
-  }, [selectedSpot, hotels, radiusKm]);
+    const filtered = filterHotelsByRadius(selectedSpot, allAvailableHotels, radiusKm);
+    if (filtered.length > 0) return filtered;
+    return filterHotelsByRadius(selectedSpot, allAvailableHotels, 25);
+  }, [selectedSpot, allAvailableHotels, radiusKm]);
 
   const nearbyRestaurants = useMemo(() => {
-    return filterRestaurantsByRadius(selectedSpot, restaurants, radiusKm);
-  }, [selectedSpot, restaurants, radiusKm]);
+    const filtered = filterRestaurantsByRadius(selectedSpot, allAvailableRestaurants, radiusKm);
+    if (filtered.length > 0) return filtered;
+    return filterRestaurantsByRadius(selectedSpot, allAvailableRestaurants, 25);
+  }, [selectedSpot, allAvailableRestaurants, radiusKm]);
 
   const nearbyGuides = useMemo(() => {
     const rawHotels = nearbyHotels.map(h => h.hotel);
-    return filterGuidesByProximity(selectedSpot, guides, rawHotels);
-  }, [selectedSpot, guides, nearbyHotels]);
+    return filterGuidesByProximity(selectedSpot, allAvailableGuides, rawHotels);
+  }, [selectedSpot, allAvailableGuides, nearbyHotels]);
 
-  // Set default selected hotel if none selected
+  // Set default selected hotel if none selected or if previously selected hotel is from another city
   React.useEffect(() => {
-    if (!selectedHotel && nearbyHotels.length > 0) {
+    const isHotelInCurrentCity = selectedHotel && 
+      (selectedHotel.city.toLowerCase() === selectedSpot.city.toLowerCase() ||
+       nearbyHotels.some(nh => nh.hotel.id === selectedHotel.id));
+
+    if ((!selectedHotel || !isHotelInCurrentCity) && nearbyHotels.length > 0) {
       const topHotel = nearbyHotels[0].hotel;
       onSelectHotel(topHotel, topHotel.roomTypes[0]);
     }
-  }, [nearbyHotels, selectedHotel, onSelectHotel]);
+  }, [nearbyHotels, selectedHotel, selectedSpot, onSelectHotel]);
 
   return (
     <div className="space-y-8">
@@ -622,7 +667,7 @@ export const ProximityRadarView: React.FC<ProximityRadarViewProps> = ({
             onClick={onProceedToSummary}
             className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/25 transition-all"
           >
-            <span>Proceed to Package Review</span>
+            <span>Build Affordable Package (Max Discounts)</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

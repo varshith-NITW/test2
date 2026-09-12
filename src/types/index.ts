@@ -143,6 +143,16 @@ export interface SplitBreakdown {
   originalTotal?: number;
   websiteDiscountPercent?: number;
   websiteDiscountAmount?: number;
+  // Maximum Affordability & Discount Engine
+  affordabilityTier?: 'budget' | 'value' | 'luxury';
+  hotelDiscountAmount?: number;
+  restaurantDiscountAmount?: number;
+  guideDiscountAmount?: number;
+  platformSubsidyAmount?: number;
+  otaMarketPrice?: number;
+  travelerSavingsAmount?: number;
+  travelerSavingsPercent?: number;
+  appliedPromoCode?: string;
   // Hotel split
   hotelGross: number;
   hotelGrossOriginal?: number;
