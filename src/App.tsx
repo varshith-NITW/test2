@@ -9,7 +9,7 @@ import { HotelPartnerPortal } from './components/hotel/HotelPartnerPortal';
 import { LocalGuidePortal } from './components/guide/LocalGuidePortal';
 import { AuthModal } from './components/auth/AuthModal';
 import { getCurrentUser, logOut } from './services/authService';
-import { saveBookingToCloud, subscribeToCloudBookings } from './services/cloudStorageService';
+import { saveBookingToCloud, subscribeToCloudBookings, saveHotelToCloud, saveGuideToCloud } from './services/cloudStorageService';
 import { calculateSplitBreakdown } from './services/paymentSplitService';
 import { createBookingViaNodeAPI } from './services/apiClient';
 import { loadGoogleMapsScript } from './services/googleMapsService';
@@ -231,10 +231,16 @@ export function App() {
 
   const handleRegisterNewHotel = (newHotel: Hotel) => {
     setHotels((prev) => [newHotel, ...prev]);
+    saveHotelToCloud(newHotel).catch((err) => {
+      console.info('Cloud Firestore hotel save note:', err.message);
+    });
   };
 
   const handleRegisterNewGuide = (newGuide: Guide) => {
     setGuides((prev) => [newGuide, ...prev]);
+    saveGuideToCloud(newGuide).catch((err) => {
+      console.info('Cloud Firestore guide save note:', err.message);
+    });
   };
 
   const handleAddSpot = (spot: TouristSpot) => {

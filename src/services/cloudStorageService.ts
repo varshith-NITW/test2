@@ -15,13 +15,15 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from './firebaseConfig';
-import { UserProfile, Booking } from '../types';
+import { UserProfile, Booking, Hotel, Guide } from '../types';
 
 // Collection Names in Cloud Firestore
 const COLLECTION_TRAVELERS = 'cloud_travelers';
 const COLLECTION_BOOKINGS = 'cloud_bookings';
 const COLLECTION_ACCOUNTS = 'cloud_auth_vault';
 const COLLECTION_SESSIONS = 'cloud_active_sessions';
+const COLLECTION_HOTELS = 'cloud_hotels';
+const COLLECTION_GUIDES = 'cloud_guides';
 
 // Cloud session client key (only session token is kept locally to resume cloud session)
 const SESSION_CLIENT_ID_KEY = 'travelai_cloud_session_id';
@@ -257,4 +259,42 @@ export async function getActiveCloudSession(): Promise<UserProfile | null> {
   }
 
   return null;
+}
+
+/**
+ * 10. Save Registered Hotel Partner to Cloud Firestore
+ */
+export async function saveHotelToCloud(hotel: Hotel): Promise<boolean> {
+  try {
+    const docRef = doc(db, COLLECTION_HOTELS, hotel.id);
+    await setDoc(docRef, {
+      ...hotel,
+      updatedAt: new Date().toISOString(),
+      storageType: 'Google Cloud Firestore'
+    }, { merge: true });
+    console.info(`[Cloud Storage] Hotel ${hotel.name} saved to Cloud Firestore.`);
+    return true;
+  } catch (err: any) {
+    console.warn('[Cloud Storage] Note while saving hotel:', err.message);
+    return false;
+  }
+}
+
+/**
+ * 11. Save Registered Guide to Cloud Firestore
+ */
+export async function saveGuideToCloud(guide: Guide): Promise<boolean> {
+  try {
+    const docRef = doc(db, COLLECTION_GUIDES, guide.id);
+    await setDoc(docRef, {
+      ...guide,
+      updatedAt: new Date().toISOString(),
+      storageType: 'Google Cloud Firestore'
+    }, { merge: true });
+    console.info(`[Cloud Storage] Guide ${guide.name} saved to Cloud Firestore.`);
+    return true;
+  } catch (err: any) {
+    console.warn('[Cloud Storage] Note while saving guide:', err.message);
+    return false;
+  }
 }

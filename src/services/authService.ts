@@ -8,6 +8,13 @@ import {
   setActiveCloudSession,
   getActiveCloudSession
 } from './cloudStorageService';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut as firebaseSignOut,
+  updateProfile
+} from 'firebase/auth';
+import { auth } from './firebaseConfig';
 
 export const DEFAULT_USER: UserProfile = {
   id: 'user-varshith-1',
@@ -76,18 +83,38 @@ export async function signUp(data: SignUpFormData): Promise<{ success: boolean; 
   const cleanPhone = phoneNumber.trim();
   const cleanLocation = location.trim();
 
-  // 1. Check if user already exists in Google Cloud Firestore
+  let firebaseUid: string | null = null;
+
+  // 1. Authenticate with Firebase Authentication
   try {
-    const existingCloudUser = await getTravelerFromCloud(cleanEmail);
-    if (existingCloudUser) {
-      return { success: false, error: 'An account with this email address already exists in Cloud Firestore.' };
+    const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+    firebaseUid = userCredential.user.uid;
+    await updateProfile(userCredential.user, {
+      displayName: cleanUsername
+    }).catch(() => {});
+    console.info('[Firebase Auth] User successfully created in Firebase Auth. UID:', firebaseUid);
+  } catch (authErr: any) {
+    console.warn('[Firebase Auth] Notice during signup:', authErr.code, authErr.message);
+    if (authErr.code === 'auth/email-already-in-use') {
+      return { success: false, error: 'An account with this email address already exists.' };
     }
-  } catch (e) {
-    // Cloud query check note
+    if (authErr.code === 'auth/weak-password') {
+      return { success: false, error: 'Password must be at least 6 characters long.' };
+    }
+    // If Email/Password provider isn't enabled yet in console (auth/operation-not-allowed),
+    // proceed to save in Cloud Firestore database vault
   }
 
+  // 2. Check if user already exists in Google Cloud Firestore
+  try {
+    const existingCloudUser = await getTravelerFromCloud(cleanEmail);
+    if (existingCloudUser && !firebaseUid) {
+      return { success: false, error: 'An account with this email address already exists in Cloud Firestore.' };
+    }
+  } catch (e) {}
+
   const newProfile: UserProfile = {
-    id: `usr-${Date.now()}`,
+    id: firebaseUid || `usr-${Date.now()}`,
     username: cleanUsername,
     email: cleanEmail,
     phoneNumber: cleanPhone,
@@ -95,12 +122,12 @@ export async function signUp(data: SignUpFormData): Promise<{ success: boolean; 
     createdAt: new Date().toISOString()
   };
 
-  // 2. Save directly to Google Cloud Firestore
+  // 3. Save directly to Google Cloud Firestore (collections: cloud_travelers and cloud_auth_vault)
   await saveTravelerToCloud(newProfile);
   await saveAccountVaultToCloud(cleanEmail, password);
   await setActiveCloudSession(newProfile);
 
-  // 3. Also synchronize with backend Node.js API Gateway if reachable
+  // 4. Synchronize with backend Node.js API Gateway if reachable
   try {
     fetch(`${NODE_API_BASE}/api/auth/signup`, {
       method: 'POST',
@@ -123,7 +150,7 @@ export async function signUp(data: SignUpFormData): Promise<{ success: boolean; 
  * - email
  * - password
  * 
- * Authenticates against Google Cloud Firestore.
+ * Authenticates with Firebase Auth and Google Cloud Firestore.
  */
 export async function logIn(data: LoginFormData): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
   const { email, password } = data;
@@ -143,7 +170,32 @@ export async function logIn(data: LoginFormData): Promise<{ success: boolean; us
     return { success: true, user: DEFAULT_USER };
   }
 
-  // 2. Verify against Google Cloud Firestore
+  // 2. Try Firebase Authentication
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+    console.info('[Firebase Auth] User signed in via Firebase Auth. UID:', userCredential.user.uid);
+    let cloudUser = await getTravelerFromCloud(cleanEmail);
+    if (!cloudUser) {
+      cloudUser = {
+        id: userCredential.user.uid,
+        username: userCredential.user.displayName || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        phoneNumber: '+91 98490 12345',
+        location: 'Registered Traveler',
+        createdAt: new Date().toISOString()
+      };
+      await saveTravelerToCloud(cloudUser);
+    }
+    await setActiveCloudSession(cloudUser);
+    return { success: true, user: cloudUser };
+  } catch (authErr: any) {
+    console.warn('[Firebase Auth] Notice during login:', authErr.code, authErr.message);
+    if (authErr.code === 'auth/wrong-password' || authErr.code === 'auth/invalid-credential') {
+      return { success: false, error: 'Invalid email or password. Please check your credentials.' };
+    }
+  }
+
+  // 3. Fallback: Google Cloud Firestore Vault verification
   try {
     const isCloudValid = await verifyAccountVaultInCloud(cleanEmail, password);
     if (isCloudValid) {
@@ -157,7 +209,7 @@ export async function logIn(data: LoginFormData): Promise<{ success: boolean; us
     console.info('Cloud Firestore authentication note:', cloudErr);
   }
 
-  // 3. Fallback: Node.js API Gateway
+  // 4. Fallback: Node.js API Gateway
   try {
     const res = await fetch(`${NODE_API_BASE}/api/auth/login`, {
       method: 'POST',
@@ -179,9 +231,14 @@ export async function logIn(data: LoginFormData): Promise<{ success: boolean; us
 }
 
 /**
- * Log out active user from Cloud Session
+ * Log out active user from Firebase Auth and Cloud Session
  */
 export async function logOut(): Promise<void> {
+  try {
+    await firebaseSignOut(auth);
+  } catch (e) {
+    // Fall through
+  }
   try {
     await setActiveCloudSession(null);
   } catch (e) {

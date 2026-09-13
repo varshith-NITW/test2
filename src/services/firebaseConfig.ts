@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
 
 // Configurable Firebase project credentials
 // Can be customized via Vite .env variables (VITE_FIREBASE_API_KEY, etc.) or custom settings
@@ -51,15 +52,16 @@ export function setCustomFirebaseConfig(config: FirebaseProjectConfig): void {
 /**
  * Initialize or retrieve the Firebase app instance
  */
-function initializeFirebase(): { app: FirebaseApp; db: Firestore } {
+function initializeFirebase(): { app: FirebaseApp; db: Firestore; auth: Auth } {
   const config = getActiveFirebaseConfig();
   const app = getApps().length > 0 ? getApp() : initializeApp(config);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  return { app, db };
+  return { app, db, auth };
 }
 
-export const { app, db } = initializeFirebase();
+export const { app, db, auth } = initializeFirebase();
 
 /**
  * Check cloud connection status
