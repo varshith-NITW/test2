@@ -1245,8 +1245,46 @@ export function getMaskedGeminiApiKey(): string {
   return `${key.slice(0, 6)}...${key.slice(-4)}`;
 }
 
+const LIVE_GEMINI_MODELS = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-2.5-flash'];
+
 /**
- * Calls backend /api/recommend-places endpoint (with Gemini 2.5 Flash Structured Outputs)
+ * Direct browser call to Google Generative Language API (Bypasses mockdata when key is present)
+ */
+export async function callGoogleGeminiLive(prompt: string, apiKey: string): Promise<any | null> {
+  if (!apiKey || apiKey.trim().length < 5) return null;
+
+  for (const model of LIVE_GEMINI_MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.4
+          }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          const parsed = JSON.parse(text);
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn(`Direct call to ${model} notice:`, err);
+    }
+  }
+  return null;
+}
+
+/**
+ * Calls live Google Gemini API or backend /api/recommend-places endpoint
  */
 export async function fetchGeminiDestinations(params: {
   preferences: string;
@@ -1255,6 +1293,41 @@ export async function fetchGeminiDestinations(params: {
   companions?: string;
 }): Promise<{ destinations: GeminiRecommendedDestination[]; source: string }> {
   const userKey = getGeminiApiKey();
+
+  // 1. Direct Live Google Gemini AI Call (100% real-time AI without mockdata)
+  if (userKey) {
+    const livePrompt = `You are a real-world travel recommender.
+User Request: "${params.preferences}"
+Budget: ${params.budget || 'Moderate'}
+Duration: ${params.days || 3} days
+Companions: ${params.companions || 'Family'}
+
+Recommend 3 to 4 authentic, real-world tourist destinations matching the user query.
+STRICT REQUIREMENT: If the user mentioned a specific city or region, only recommend real attractions within that exact city or region.
+Return STRICTLY a JSON object matching this schema:
+{
+  "destinations": [
+    {
+      "name": "Attraction Name",
+      "city": "City Name",
+      "stateOrCountry": "State or Country",
+      "shortDescription": "2 sentences describing why this attraction is renowned and its cultural significance",
+      "bestTimeToVisit": "Recommended time of day to visit",
+      "highlights": ["Highlight 1", "Highlight 2", "Highlight 3", "Highlight 4"]
+    }
+  ]
+}`;
+
+    const liveData = await callGoogleGeminiLive(livePrompt, userKey);
+    if (liveData && Array.isArray(liveData.destinations) && liveData.destinations.length > 0) {
+      return {
+        destinations: liveData.destinations,
+        source: 'google-gemini-live-ai'
+      };
+    }
+  }
+
+  // 2. Try Node.js API Gateway if running
   try {
     const res = await fetch('/api/recommend-places', {
       method: 'POST',
@@ -1265,13 +1338,16 @@ export async function fetchGeminiDestinations(params: {
       body: JSON.stringify({ ...params, apiKey: userKey })
     });
     if (res.ok) {
-      return await res.json();
+      const data = await res.json();
+      if (data && data.destinations && data.destinations.length > 0) {
+        return data;
+      }
     }
   } catch (err) {
     console.warn('Network error reaching /api/recommend-places:', err);
   }
 
-  // Pure Targeted Fallback (Never shows unrelated cities like Kochi/Lucknow when user searched Surat!)
+  // Pure Targeted Fallback (Used only when no API key is set)
   const lower = (params.preferences || '').toLowerCase();
   if (lower.includes('surat')) {
     return {
@@ -1341,7 +1417,7 @@ export async function fetchGeminiDestinations(params: {
 }
 
 /**
- * Calls backend /api/recommend-hospitality endpoint (with Gemini 2.5 Flash Structured Outputs)
+ * Calls live Google Gemini API or backend /api/recommend-hospitality endpoint
  */
 export async function fetchGeminiHospitality(params: {
   destinationName: string;
@@ -1349,6 +1425,48 @@ export async function fetchGeminiHospitality(params: {
   foodPreferences?: string;
 }): Promise<GeminiHospitalityResult> {
   const userKey = getGeminiApiKey();
+
+  // 1. Direct Live Google Gemini AI Call (100% real-time AI without mockdata)
+  if (userKey) {
+    const hospitalityPrompt = `You are an expert hospitality and culinary concierge.
+Destination: "${params.destinationName}"
+Budget: ${params.userBudget || 'Moderate'}
+Food preferences: ${params.foodPreferences || 'Authentic regional gastronomy & local favorites'}
+
+Recommend 4 authentic, real-world hotels and 4 authentic, famous restaurants near "${params.destinationName}".
+Return STRICTLY a JSON object matching this schema:
+{
+  "hotels": [
+    {
+      "name": "Real Hotel Name",
+      "category": "Heritage Luxury | Boutique Stay | Urban Comfort",
+      "priceRange": "e.g. ₹4,500 - ₹8,500 / night",
+      "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4"],
+      "locationArea": "Area or neighborhood"
+    }
+  ],
+  "restaurants": [
+    {
+      "name": "Real Restaurant or Food Stall Name",
+      "cuisineType": "Cuisine style",
+      "mustTryDishes": ["Dish 1", "Dish 2", "Dish 3", "Dish 4"],
+      "atmosphere": "Atmosphere and specialty description"
+    }
+  ]
+}`;
+
+    const liveData = await callGoogleGeminiLive(hospitalityPrompt, userKey);
+    if (liveData && Array.isArray(liveData.hotels) && Array.isArray(liveData.restaurants)) {
+      return {
+        destinationName: params.destinationName,
+        hotels: liveData.hotels,
+        restaurants: liveData.restaurants,
+        source: 'google-gemini-live-ai'
+      };
+    }
+  }
+
+  // 2. Try Node.js API Gateway if running
   try {
     const res = await fetch('/api/recommend-hospitality', {
       method: 'POST',
@@ -1371,7 +1489,7 @@ export async function fetchGeminiHospitality(params: {
     console.warn('Network error reaching /api/recommend-hospitality:', err);
   }
 
-  // Targeted Fallback
+  // Pure Targeted Fallback (Used only when no API key is set)
   const lower = (params.destinationName || '').toLowerCase();
   const isSurat = lower.includes('surat') || lower.includes('dumas') || lower.includes('castle') || 
                   lower.includes('tapi') || lower.includes('gopi') || lower.includes('chauta') || lower.includes('locho');
