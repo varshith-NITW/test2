@@ -382,46 +382,49 @@ export async function getPlacesRecommendations(body: {
 
   // Try live Gemini API if key is available
   if (ai) {
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              destinations: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    stateOrCountry: { type: Type.STRING },
-                    shortDescription: { type: Type.STRING },
-                    bestTimeToVisit: { type: Type.STRING },
-                    highlights: {
-                      type: Type.ARRAY,
-                      items: { type: Type.STRING }
-                    }
-                  },
-                  required: ['name', 'shortDescription', 'highlights']
+    const candidateModels = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+    for (const model of candidateModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                destinations: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      stateOrCountry: { type: Type.STRING },
+                      shortDescription: { type: Type.STRING },
+                      bestTimeToVisit: { type: Type.STRING },
+                      highlights: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                      }
+                    },
+                    required: ['name', 'shortDescription', 'highlights']
+                  }
                 }
-              }
-            },
-            required: ['destinations']
+              },
+              required: ['destinations']
+            }
+          }
+        });
+
+        if (response.text) {
+          const parsed = JSON.parse(response.text);
+          if (parsed && Array.isArray(parsed.destinations) && parsed.destinations.length > 0) {
+            return { destinations: parsed.destinations, source: `${model}-live` };
           }
         }
-      });
-
-      if (response.text) {
-        const parsed = JSON.parse(response.text);
-        if (parsed && Array.isArray(parsed.destinations) && parsed.destinations.length > 0) {
-          return { destinations: parsed.destinations, source: 'gemini-2.5-flash-live' };
-        }
+      } catch (err: any) {
+        console.warn(`Gemini live API (${model}) failed:`, err.message || err);
       }
-    } catch (err: any) {
-      console.warn('Gemini 2.5 Flash live API failed or key restricted. Falling back to targeted city knowledge:', err.message || err);
     }
   }
 
@@ -506,56 +509,59 @@ export async function getHospitalityRecommendations(body: {
 
   // Try live Gemini API if key is available
   if (ai) {
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              hotels: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    category: { type: Type.STRING },
-                    priceRange: { type: Type.STRING },
-                    features: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    locationArea: { type: Type.STRING }
-                  },
-                  required: ['name', 'category', 'priceRange']
+    const candidateModels = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+    for (const model of candidateModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                hotels: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      category: { type: Type.STRING },
+                      priceRange: { type: Type.STRING },
+                      features: { type: Type.ARRAY, items: { type: Type.STRING } },
+                      locationArea: { type: Type.STRING }
+                    },
+                    required: ['name', 'category', 'priceRange']
+                  }
+                },
+                restaurants: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      cuisineType: { type: Type.STRING },
+                      mustTryDishes: { type: Type.ARRAY, items: { type: Type.STRING } },
+                      atmosphere: { type: Type.STRING }
+                    },
+                    required: ['name', 'cuisineType', 'mustTryDishes']
+                  }
                 }
               },
-              restaurants: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    cuisineType: { type: Type.STRING },
-                    mustTryDishes: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    atmosphere: { type: Type.STRING }
-                  },
-                  required: ['name', 'cuisineType', 'mustTryDishes']
-                }
-              }
-            },
-            required: ['hotels', 'restaurants']
+              required: ['hotels', 'restaurants']
+            }
+          }
+        });
+
+        if (response.text) {
+          const parsed = JSON.parse(response.text);
+          if (parsed && Array.isArray(parsed.hotels) && Array.isArray(parsed.restaurants)) {
+            return { ...parsed, source: `${model}-live` };
           }
         }
-      });
-
-      if (response.text) {
-        const parsed = JSON.parse(response.text);
-        if (parsed && Array.isArray(parsed.hotels) && Array.isArray(parsed.restaurants)) {
-          return { ...parsed, source: 'gemini-2.5-flash-live' };
-        }
+      } catch (err: any) {
+        console.warn(`Gemini hospitality live API (${model}) failed:`, err.message || err);
       }
-    } catch (err: any) {
-      console.warn('Gemini 2.5 Flash hospitality live API failed. Using targeted city hospitality:', err.message || err);
     }
   }
 
