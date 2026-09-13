@@ -436,7 +436,8 @@ app.get('/api/system/status', (req: Request, res: Response) => {
 // Step 1: Recommend tourist places based on user preferences & opinions
 app.post('/api/recommend-places', async (req: Request, res: Response) => {
   try {
-    const result = await getPlacesRecommendations(req.body);
+    const apiKey = (req.headers['x-gemini-key'] as string) || req.body.apiKey;
+    const result = await getPlacesRecommendations({ ...req.body, apiKey });
     res.json(result);
   } catch (error: any) {
     console.error('Error in /api/recommend-places:', error);
@@ -447,7 +448,8 @@ app.post('/api/recommend-places', async (req: Request, res: Response) => {
 // Step 2: Recommend hotels & restaurants for the selected destination
 app.post('/api/recommend-hospitality', async (req: Request, res: Response) => {
   try {
-    const result = await getHospitalityRecommendations(req.body);
+    const apiKey = (req.headers['x-gemini-key'] as string) || req.body.apiKey;
+    const result = await getHospitalityRecommendations({ ...req.body, apiKey });
     res.json(result);
   } catch (error: any) {
     console.error('Error in /api/recommend-hospitality:', error);

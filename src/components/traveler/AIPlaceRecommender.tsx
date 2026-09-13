@@ -17,7 +17,9 @@ import {
   Users, 
   Wallet,
   CheckCircle2,
-  Check
+  Check,
+  Key,
+  X
 } from 'lucide-react';
 import { 
   askGeminiTouristRecommendations, 
@@ -28,7 +30,11 @@ import {
   convertHospitalityHotelsToHotels,
   convertHospitalityRestaurantsToRestaurants,
   GeminiRecommendedDestination,
-  GeminiHospitalityResult
+  GeminiHospitalityResult,
+  getGeminiApiKey,
+  setGeminiApiKey,
+  isCustomGeminiApiKey,
+  getMaskedGeminiApiKey
 } from '../../services/geminiService';
 
 interface AIPlaceRecommenderProps {
@@ -70,7 +76,14 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   const [hospitalityData, setHospitalityData] = useState<GeminiHospitalityResult | null>(null);
   const [isLoadingHospitality, setIsLoadingHospitality] = useState<boolean>(false);
 
+  // Gemini API Key Management Modal State
+  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
+  const [keyInput, setKeyInput] = useState<string>('');
+  const [hasCustomKey, setHasCustomKey] = useState<boolean>(isCustomGeminiApiKey());
+  const [keyNotice, setKeyNotice] = useState<string>('');
+
   const popularDestinations = [
+    { name: 'Surat', icon: '💎', subtitle: 'Surat Castle & Street Gastronomy' },
     { name: 'Kochi', icon: '🌴', subtitle: 'Fort Kochi & Backwaters' },
     { name: 'Lucknow', icon: '🏛️', subtitle: 'Bara Imambara & Nawabi' },
     { name: 'Delhi', icon: '🕌', subtitle: 'Qutub Minar & Red Fort' },
@@ -82,6 +95,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   ];
 
   const suggestionChips = [
+    { label: '💎 Surat Silk & Gastronomy', query: 'Historic Surat Castle, Dumas Beach and famous Surti Locho with street gastronomy' },
     { label: '🌴 Kochi & Kerala Backwaters', query: 'I want calm scenic backwaters and beach lagoons with seafood' },
     { label: '🏛️ Lucknow Nawabi Heritage', query: 'I love 18th-century architecture, labyrinth corridors and melt-in-mouth kebabs' },
     { label: '🕌 Delhi Imperial Trail', query: 'Historic UNESCO minarets, grand forts and bustling food streets' },
@@ -197,12 +211,31 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
 
         <div className="relative z-10 max-w-4xl">
           
-          {/* Badge */}
-          <div className="flex flex-wrap items-center gap-2.5 mb-3">
+          {/* Badge & Key Configuration */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-extrabold shadow-sm">
               <Bot className="w-4 h-4 text-indigo-400 animate-pulse" />
               <span>Powered by Google Gemini 2.5 Flash &bull; Real Check-In Footfall Engine</span>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setKeyInput(getGeminiApiKey());
+                setKeyNotice('');
+                setShowKeyModal(true);
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                hasCustomKey 
+                  ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/30' 
+                  : 'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 hover:bg-indigo-500/30'
+              }`}
+              title="Configure Google Gemini API Key"
+            >
+              <Key className="w-3.5 h-3.5 text-amber-300" />
+              <span>{hasCustomKey ? 'Gemini 2.5 Flash: Live Key Active' : 'Configure Gemini API Key'}</span>
+              <span className={`w-2 h-2 rounded-full ${hasCustomKey ? 'bg-emerald-400 animate-ping' : 'bg-indigo-400'}`} />
+            </button>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-2">
@@ -772,6 +805,116 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
         </div>
       )}
 
+      {/* Gemini API Key Configuration Modal */}
+      {showKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 border border-indigo-700/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-white relative space-y-5">
+            
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setShowKeyModal(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-white p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <Key className="w-6 h-6 text-amber-300" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Google Gemini API Key</h3>
+                <p className="text-xs text-slate-400">Configure your Gemini 2.5 Flash AI model connection</p>
+              </div>
+            </div>
+
+            {/* Current Status */}
+            <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs flex items-center justify-between">
+              <span className="text-slate-400">Current Status:</span>
+              <span className={`font-semibold flex items-center gap-1.5 ${hasCustomKey ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                <span className={`w-2 h-2 rounded-full ${hasCustomKey ? 'bg-emerald-400' : 'bg-indigo-400'}`} />
+                {hasCustomKey ? `Custom Key Connected (${getMaskedGeminiApiKey()})` : 'Built-in Intelligent Engine'}
+              </span>
+            </div>
+
+            {keyNotice && (
+              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{keyNotice}</span>
+              </div>
+            )}
+
+            {/* Key Form */}
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-slate-300">
+                Gemini API Key (Google AI Studio):
+              </label>
+              <input
+                type="text"
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full px-4 py-3 bg-slate-950 text-white placeholder:text-slate-500 rounded-xl border border-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 text-xs font-mono"
+              />
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Enter your API key to let Gemini dynamically generate recommendations for <strong>any destination worldwide</strong> (Surat, Paris, Tokyo, Bali, etc.).
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setGeminiApiKey(keyInput);
+                  setHasCustomKey(isCustomGeminiApiKey());
+                  setKeyNotice('Gemini API key saved successfully! Live AI calls will now use this key.');
+                  setTimeout(() => {
+                    setShowKeyModal(false);
+                  }, 1200);
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                <span>Save Key</span>
+              </button>
+
+              {hasCustomKey && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGeminiApiKey('');
+                    setKeyInput('');
+                    setHasCustomKey(false);
+                    setKeyNotice('Custom key removed. Reverted to built-in intelligent engine.');
+                  }}
+                  className="py-2.5 px-4 rounded-xl bg-red-950/50 hover:bg-red-900/50 text-red-300 border border-red-800/40 font-bold text-xs transition-all cursor-pointer"
+                >
+                  Clear Key
+                </button>
+              )}
+            </div>
+
+            {/* Help link */}
+            <div className="pt-3 border-t border-slate-800 text-center">
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline"
+              >
+                <span>Get a free Gemini API key from Google AI Studio</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
+
