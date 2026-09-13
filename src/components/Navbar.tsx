@@ -1,7 +1,7 @@
 import React from 'react';
-import { Compass, Hotel, Users, ShieldCheck, DollarSign, Sparkles, MapPin, Zap } from 'lucide-react';
+import { Compass, Hotel, Users, ShieldCheck, Sparkles, MapPin, Zap } from 'lucide-react';
 
-export type PersonaType = 'traveler' | 'hotel' | 'guide' | 'split';
+export type PersonaType = 'traveler' | 'hotel' | 'guide';
 
 interface NavbarProps {
   currentPersona: PersonaType;
@@ -95,23 +95,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Users className="w-4 h-4 text-amber-600" />
               <span className="hidden sm:inline">Guide Portal</span>
-            </button>
-
-            <button
-              onClick={() => onSelectPersona('split')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                currentPersona === 'split'
-                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80 font-bold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-              }`}
-            >
-              <DollarSign className="w-4 h-4 text-emerald-600" />
-              <span className="hidden sm:inline">Split Engine</span>
-              {bookingCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
-                  {bookingCount}
-                </span>
-              )}
             </button>
           </nav>
 

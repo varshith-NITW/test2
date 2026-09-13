@@ -7,7 +7,6 @@ import { GuideAddonModal } from './components/traveler/GuideAddonModal';
 import { CheckoutModal } from './components/traveler/CheckoutModal';
 import { HotelPartnerPortal } from './components/hotel/HotelPartnerPortal';
 import { LocalGuidePortal } from './components/guide/LocalGuidePortal';
-import { SplitPaymentSimulator } from './components/split/SplitPaymentSimulator';
 import { calculateSplitBreakdown } from './services/paymentSplitService';
 import { createBookingViaNodeAPI } from './services/apiClient';
 import { loadGoogleMapsScript } from './services/googleMapsService';
@@ -183,10 +182,6 @@ export function App() {
             onUpdateGuidePackages={() => {}}
             onRegisterNewGuide={handleRegisterNewGuide}
           />
-        )}
-
-        {currentPersona === 'split' && (
-          <SplitPaymentSimulator />
         )}
 
       </main>
