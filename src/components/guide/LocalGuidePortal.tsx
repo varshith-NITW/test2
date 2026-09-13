@@ -267,6 +267,26 @@ export const LocalGuidePortal: React.FC<LocalGuidePortalProps> = ({
                     </div>
                   </div>
 
+                  {/* Traveler Contact Details for Tour Meetup */}
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Traveler Name</span>
+                      <strong className="text-slate-900 truncate block">{b.travelerName || 'Varshith Sharma'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Contact Phone</span>
+                      <strong className="text-emerald-700 truncate block">{b.travelerPhone || '+91 98490 12345'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Email Voucher</span>
+                      <strong className="text-slate-800 truncate block">{b.travelerEmail || 'varshith@example.com'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Origin City</span>
+                      <strong className="text-blue-700 truncate block">{b.travelerLocation || 'Surat, Gujarat'}</strong>
+                    </div>
+                  </div>
+
                   <div className="flex flex-wrap items-center gap-3 text-slate-600 text-[11px] pt-1 border-t border-slate-200">
                     <span>🏨 Partner Hotel: <strong className="text-slate-800">{b.hotelName}</strong></span>
                     <span>•</span>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Hotel, Guide, Booking, RoomType } from '../../types';
-import { ShieldCheck, Plus, DollarSign, Users, CheckCircle2, Building, Sparkles, MapPin, TrendingUp, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Plus, DollarSign, Users, CheckCircle2, Building, Sparkles, MapPin, TrendingUp, AlertCircle, Phone, Mail, User, Lock } from 'lucide-react';
 
 interface HotelPartnerPortalProps {
   hotels: Hotel[];
@@ -506,25 +506,62 @@ export const HotelPartnerPortal: React.FC<HotelPartnerPortalProps> = ({
               ) : (
                 <div className="space-y-3">
                   {hotelBookings.map((b) => (
-                    <div key={b.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-indigo-700">{b.id}</span>
-                          <span className="text-slate-400">•</span>
-                          <span className="font-semibold text-slate-900">{b.roomTypeName}</span>
-                          <span className="text-slate-500">({b.dates.nights} Nights)</span>
-                        </div>
-                        {b.guideName && (
-                          <div className="text-emerald-700 font-medium mt-0.5">
-                            ✓ Bundled Guide: {b.guideName} (+₹{b.splitBreakdown.hotelReferralKickback} referral earned)
+                    <div key={b.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-indigo-700">{b.id}</span>
+                            <span className="text-slate-400">•</span>
+                            <span className="font-semibold text-slate-900">{b.roomTypeName}</span>
+                            <span className="text-slate-500">({b.dates.nights} Nights)</span>
                           </div>
-                        )}
+                          {b.guideName && (
+                            <div className="text-emerald-700 font-medium mt-0.5">
+                              ✓ Bundled Guide: {b.guideName} (+₹{b.splitBreakdown.hotelReferralKickback} referral earned)
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="text-left sm:text-right sm:border-l sm:border-slate-200 sm:pl-4">
+                          <div className="text-[11px] text-slate-500">Hotel Net Payout</div>
+                          <div className="font-bold text-emerald-800 text-sm">
+                            ₹{(b.splitBreakdown.hotelNet + b.splitBreakdown.hotelReferralKickback).toLocaleString()}
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="text-right sm:border-l sm:border-slate-200 sm:pl-4">
-                        <div className="text-[11px] text-slate-500">Hotel Net Payout</div>
-                        <div className="font-bold text-emerald-800 text-sm">
-                          ₹{(b.splitBreakdown.hotelNet + b.splitBreakdown.hotelReferralKickback).toLocaleString()}
+                      {/* Dispatched Guest & Traveler Contact Details (Hotel & Restaurant Partner Record) */}
+                      <div className="bg-white p-3 rounded-lg border border-slate-200">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                            <User className="w-3 h-3 text-indigo-600" />
+                            <span>Guest Reservation Record (Reception Desk)</span>
+                          </span>
+                          <span className="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-200">
+                            Dispatched to Hotel & Restaurant
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-700">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">Traveler:</span>
+                            <strong className="text-slate-900 truncate block">{b.travelerName || 'Varshith Sharma'}</strong>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">Phone:</span>
+                            <strong className="text-emerald-700 truncate block">{b.travelerPhone || '+91 98490 12345'}</strong>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">Email:</span>
+                            <strong className="text-slate-800 truncate block">{b.travelerEmail || 'varshith@example.com'}</strong>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">Origin City:</span>
+                            <strong className="text-blue-700 truncate block">{b.travelerLocation || 'Surat, Gujarat'}</strong>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-[10px] text-slate-400 flex items-center gap-1.5">
+                          <Lock className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span>Strict Privacy Protocol: Traveler passwords are never accessible, stored, or sent to partner portals.</span>
                         </div>
                       </div>
                     </div>

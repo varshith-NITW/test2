@@ -48,6 +48,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [guestName, setGuestName] = useState<string>('Varshith Sharma');
   const [guestPhone, setGuestPhone] = useState<string>('+91 98490 00000');
   const [guestEmail, setGuestEmail] = useState<string>('varshith@example.com');
+  const [guestLocation, setGuestLocation] = useState<string>('Surat, Gujarat');
   
   // Razorpay states
   const [paymentMethod, setPaymentMethod] = useState<RazorpayMethod>('upi');
@@ -113,6 +114,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           nights
         },
         guests: 2,
+        travelerName: guestName,
+        travelerEmail: guestEmail,
+        travelerPhone: guestPhone,
+        travelerLocation: guestLocation,
         guideId: includeGuide && selectedGuide ? selectedGuide.id : null,
         guideName: includeGuide && selectedGuide ? selectedGuide.name : null,
         guidePackageType: includeGuide ? selectedPackage : null,

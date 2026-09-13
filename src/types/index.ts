@@ -208,6 +208,11 @@ export interface Booking {
   createdAt: string;
   meetingPointInfo?: string;
   touristSpotName?: string;
+  // Traveler Contact Details (Transferred to Hotel & Restaurant; Password is NEVER included)
+  travelerName?: string;
+  travelerEmail?: string;
+  travelerPhone?: string;
+  travelerLocation?: string;
 }
 
 export interface AIQueryFilters {
@@ -247,3 +252,26 @@ export interface AIRecommendationResponse {
 }
 
 export type StepLayer = 'step1_spots' | 'step2_proximity' | 'step3_summary' | 'step4_payment';
+
+// Authentication & User Profile Types
+export interface UserProfile {
+  id: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+  location: string;
+  createdAt?: string;
+}
+
+export interface SignUpFormData {
+  username: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+  location: string;
+}
+
+export interface LoginFormData {
+  email: string;
+  password: string;
+}

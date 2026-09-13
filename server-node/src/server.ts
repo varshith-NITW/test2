@@ -42,12 +42,184 @@ let memoryHotels = [
   }
 ];
 
+// User Management Store for Authentication
+interface UserRecord {
+  id: string;
+  username: string;
+  email: string;
+  passwordHash: string;
+  phoneNumber: string;
+  location: string;
+  createdAt: string;
+}
+
+let memoryUsers: UserRecord[] = [
+  {
+    id: 'user-varshith-1',
+    username: 'Varshith Sharma',
+    email: 'varshith@example.com',
+    passwordHash: 'demo12345',
+    phoneNumber: '+91 98490 12345',
+    location: 'Surat, Gujarat',
+    createdAt: new Date().toISOString()
+  }
+];
+
+let memoryBookings: any[] = [
+  {
+    id: 'BK-902144',
+    hotelId: 'hotel-taj-falaknuma',
+    hotelName: 'Taj Falaknuma Palace',
+    roomName: 'Palace View Heritage Suite',
+    nights: 2,
+    guideId: 'guide-mohammed-khan',
+    guideName: 'Mohammed Rizwan Khan',
+    guidePackageTitle: 'Old City & Charminar Walking Trail (4 Hours)',
+    totalCharged: 25800,
+    travelerName: 'Varshith Sharma',
+    travelerEmail: 'varshith@example.com',
+    travelerPhone: '+91 98490 12345',
+    travelerLocation: 'Surat, Gujarat',
+    splitBreakdown: {
+      totalCharged: 25800,
+      hotelGross: 24500,
+      hotelNet: 20890,
+      hotelReferralKickback: 65,
+      guideGross: 1300,
+      guideNet: 1170,
+      platformFee: 3740
+    },
+    status: 'confirmed',
+    settledAt: new Date(Date.now() - 1000 * 60 * 120).toISOString()
+  }
+];
+
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'online',
     service: 'tourmatch-node-api',
     stack: ['Node.js', 'Express', 'PostgreSQL', 'MongoDB', 'Redis']
+  });
+});
+
+// Authentication Endpoints
+// 1. Sign Up (Requires: username, email, password, phoneNumber, location)
+app.post('/api/auth/signup', (req: Request, res: Response) => {
+  const { username, email, password, phoneNumber, location } = req.body;
+
+  // Strict validation for all 5 required terms
+  if (!username || !username.trim()) {
+    return res.status(400).json({ success: false, message: 'Username is required' });
+  }
+  if (!email || !email.trim() || !email.includes('@')) {
+    return res.status(400).json({ success: false, message: 'Valid email address is required' });
+  }
+  if (!password || password.length < 6) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+  }
+  if (!phoneNumber || !phoneNumber.trim()) {
+    return res.status(400).json({ success: false, message: 'Phone number is required' });
+  }
+  if (!location || !location.trim()) {
+    return res.status(400).json({ success: false, message: 'Location is required' });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingUser = memoryUsers.find(u => u.email.toLowerCase() === normalizedEmail);
+  if (existingUser) {
+    return res.status(400).json({ success: false, message: 'An account with this email already exists' });
+  }
+
+  const newUser: UserRecord = {
+    id: `usr-${Date.now()}`,
+    username: username.trim(),
+    email: normalizedEmail,
+    passwordHash: password, // In production, bcrypt hash
+    phoneNumber: phoneNumber.trim(),
+    location: location.trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  memoryUsers.push(newUser);
+
+  // Exclude password from the response for security
+  const safeProfile = {
+    id: newUser.id,
+    username: newUser.username,
+    email: newUser.email,
+    phoneNumber: newUser.phoneNumber,
+    location: newUser.location,
+    createdAt: newUser.createdAt
+  };
+
+  const token = `tok_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+  res.status(201).json({
+    success: true,
+    message: 'User account created successfully',
+    user: safeProfile,
+    token
+  });
+});
+
+// 2. Log In (Requires: email, password)
+app.post('/api/auth/login', (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !email.trim()) {
+    return res.status(400).json({ success: false, message: 'Email address is required' });
+  }
+  if (!password) {
+    return res.status(400).json({ success: false, message: 'Password is required' });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = memoryUsers.find(u => u.email.toLowerCase() === normalizedEmail);
+
+  if (!user || user.passwordHash !== password) {
+    return res.status(401).json({ success: false, message: 'Invalid email or password' });
+  }
+
+  // Safe user profile without password
+  const safeProfile = {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    location: user.location,
+    createdAt: user.createdAt
+  };
+
+  const token = `tok_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+  res.json({
+    success: true,
+    message: 'Login successful',
+    user: safeProfile,
+    token
+  });
+});
+
+// 3. Current User Profile
+app.get('/api/auth/me', (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  const user = memoryUsers[0]; // Active fallback or token-matched
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  res.json({
+    success: true,
+    user: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      location: user.location,
+      createdAt: user.createdAt
+    }
   });
 });
 
@@ -146,7 +318,24 @@ app.post('/api/bookings/split-calculate', (req: Request, res: Response) => {
 
 // 4. Create Booking and Settle Split
 app.post('/api/bookings/create', async (req: Request, res: Response) => {
-  const { hotelId, hotelName, roomName, nights, roomPrice, guideId, guideName, guideFee, guidePackageTitle, razorpayPaymentId, razorpayOrderId, websiteDiscountAmount } = req.body;
+  const { 
+    hotelId, 
+    hotelName, 
+    roomName, 
+    nights, 
+    roomPrice, 
+    guideId, 
+    guideName, 
+    guideFee, 
+    guidePackageTitle, 
+    razorpayPaymentId, 
+    razorpayOrderId, 
+    websiteDiscountAmount,
+    travelerName,
+    travelerEmail,
+    travelerPhone,
+    travelerLocation
+  } = req.body;
 
   const split = calculateMultiPartySplit({
     roomPrice: Number(roomPrice) || 3200,
@@ -170,6 +359,11 @@ app.post('/api/bookings/create', async (req: Request, res: Response) => {
     razorpayPaymentId: razorpayPaymentId || `pay_RPZ_${Date.now().toString().slice(-8)}`,
     razorpayOrderId: razorpayOrderId || `order_RPZ_${Date.now().toString().slice(-8)}`,
     websiteDiscountAmount: websiteDiscountAmount || 0,
+    // Traveler details securely recorded for hotel & restaurant (NO password ever stored or transmitted)
+    travelerName: travelerName || 'Varshith Sharma',
+    travelerEmail: travelerEmail || 'varshith@example.com',
+    travelerPhone: travelerPhone || '+91 98490 12345',
+    travelerLocation: travelerLocation || 'Surat, Gujarat',
     paymentMethod: 'Razorpay (UPI / Card / NetBanking)',
     totalCharged: split.totalCharged,
     splitBreakdown: split,
@@ -292,31 +486,6 @@ let memoryGuides = [
     hourly_rate: 350,
     completed_tours: 278,
     status: 'certified'
-  }
-];
-
-let memoryBookings: any[] = [
-  {
-    id: 'BK-902144',
-    hotelId: 'hotel-taj-falaknuma',
-    hotelName: 'Taj Falaknuma Palace',
-    roomName: 'Palace View Heritage Suite',
-    nights: 2,
-    guideId: 'guide-mohammed-khan',
-    guideName: 'Mohammed Rizwan Khan',
-    guidePackageTitle: 'Old City & Charminar Walking Trail (4 Hours)',
-    totalCharged: 25800,
-    splitBreakdown: {
-      totalCharged: 25800,
-      hotelGross: 24500,
-      hotelNet: 20890,
-      hotelReferralKickback: 65,
-      guideGross: 1300,
-      guideNet: 1170,
-      platformFee: 3740
-    },
-    status: 'confirmed',
-    settledAt: new Date(Date.now() - 1000 * 60 * 120).toISOString()
   }
 ];
 

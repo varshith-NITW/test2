@@ -29,6 +29,7 @@ interface TravelerHomeProps {
   onBookingSuccess?: (booking: Booking) => void;
   onAddSpot?: (spot: TouristSpot) => void;
   onAddInventory?: (inventory: { hotels: Hotel[]; restaurants: Restaurant[]; guides: Guide[] }) => void;
+  currentUser?: import('../../types').UserProfile | null;
 }
 
 export const TravelerHome: React.FC<TravelerHomeProps> = ({
@@ -38,7 +39,8 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
   guides,
   onBookingSuccess,
   onAddSpot,
-  onAddInventory
+  onAddInventory,
+  currentUser
 }) => {
   // Step layer state
   const [currentStep, setCurrentStep] = useState<StepLayer>('step1_spots');
@@ -290,6 +292,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           appliedPromoCode={appliedPromoCode}
           onClose={() => setShowRazorpayModal(false)}
           onBookingConfirmed={handleBookingConfirmed}
+          currentUser={currentUser}
         />
       )}
 

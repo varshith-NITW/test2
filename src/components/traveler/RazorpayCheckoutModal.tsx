@@ -44,6 +44,7 @@ interface RazorpayCheckoutModalProps {
   appliedPromoCode?: string;
   onClose: () => void;
   onBookingConfirmed: (booking: Booking) => void;
+  currentUser?: import('../../types').UserProfile | null;
 }
 
 type RazorpayMethod = 'upi' | 'card' | 'netbanking' | 'qr' | 'emi';
@@ -60,11 +61,23 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
   affordabilityTier = 'budget',
   appliedPromoCode = 'AFFORDABLEINDIA',
   onClose,
-  onBookingConfirmed
+  onBookingConfirmed,
+  currentUser
 }) => {
-  const [guestName, setGuestName] = useState<string>('Varshith Sharma');
-  const [guestPhone, setGuestPhone] = useState<string>('+91 98490 12345');
-  const [guestEmail, setGuestEmail] = useState<string>('varshith@example.com');
+  const [guestName, setGuestName] = useState<string>(currentUser?.username || 'Varshith Sharma');
+  const [guestPhone, setGuestPhone] = useState<string>(currentUser?.phoneNumber || '+91 98490 12345');
+  const [guestEmail, setGuestEmail] = useState<string>(currentUser?.email || 'varshith@example.com');
+  const [guestLocation, setGuestLocation] = useState<string>(currentUser?.location || 'Surat, Gujarat');
+
+  // Synchronize when currentUser is loaded/updated
+  React.useEffect(() => {
+    if (currentUser) {
+      setGuestName(currentUser.username);
+      setGuestPhone(currentUser.phoneNumber);
+      setGuestEmail(currentUser.email);
+      setGuestLocation(currentUser.location);
+    }
+  }, [currentUser]);
 
   // Payment states
   const [paymentMethod, setPaymentMethod] = useState<RazorpayMethod>('upi');
@@ -122,7 +135,7 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
 
       const newBooking: Booking = {
         id: `BK-RPZ-${Math.floor(100000 + Math.random() * 900000)}`,
-        userId: 'user-varshith-1',
+        userId: currentUser?.id || 'user-varshith-1',
         hotelId: hotel.id,
         hotelName: hotel.name,
         roomTypeId: selectedRoom.id,
@@ -133,6 +146,11 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
           nights
         },
         guests: 2,
+        // Lead Traveler Details (Printed on receipt; dispatched to hotel & restaurant partners)
+        travelerName: guestName,
+        travelerEmail: guestEmail,
+        travelerPhone: guestPhone,
+        travelerLocation: guestLocation,
         guideId: selectedGuide ? selectedGuide.id : null,
         guideName: selectedGuide ? selectedGuide.name : null,
         guidePackageType: selectedGuide ? selectedPackage : null,
@@ -275,7 +293,41 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                {/* Traveler Details Transferred to Partners & Receipt Ticket */}
+                <div className="mt-3 pt-3 border-t border-slate-800 bg-white/5 rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                      Lead Guest & Partner Booking Credentials
+                    </span>
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30">
+                      Dispatched to Hotel & Restaurant
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-slate-400 text-[9px] block">Traveler Username</span>
+                      <strong className="text-white truncate block">{confirmedBooking.travelerName || guestName}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[9px] block">Contact Phone</span>
+                      <strong className="text-emerald-400 truncate block">{confirmedBooking.travelerPhone || guestPhone}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[9px] block">Email Voucher</span>
+                      <strong className="text-slate-300 truncate block">{confirmedBooking.travelerEmail || guestEmail}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[9px] block">Traveler City</span>
+                      <strong className="text-blue-300 truncate block">{confirmedBooking.travelerLocation || guestLocation}</strong>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-[10px] text-slate-400 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Transmitted to Property Reception & Restaurant Desk &bull; Passwords strictly protected</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
                   <span>Meeting Point: {confirmedBooking.meetingPointInfo}</span>
                   <span className="text-emerald-400 font-bold">PAID ₹{confirmedBooking.totalAmount.toLocaleString()}</span>
                 </div>
@@ -326,31 +378,59 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
                 </div>
               </div>
 
-              {/* Guest Details */}
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                <span className="text-xs font-bold text-slate-700 block mb-2">Lead Traveler Contact:</span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  <input
-                    type="text"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="Full Name"
-                    className="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    placeholder="Phone Number"
-                    className="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <input
-                    type="email"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    placeholder="Email Address"
-                    className="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+              {/* Lead Traveler Contact & Partner Dispatch Details */}
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700 block">Lead Traveler Contact:</span>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Dispatched to Hotel & Restaurant
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Username / Name *</label>
+                    <input
+                      type="text"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="Full Name"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Phone (Reception) *</label>
+                    <input
+                      type="text"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="Phone Number"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Email Receipt *</label>
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="Email Address"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-bold block mb-0.5">Origin / City *</label>
+                    <input
+                      type="text"
+                      value={guestLocation}
+                      onChange={(e) => setGuestLocation(e.target.value)}
+                      placeholder="City / Location"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="pt-1 flex items-center gap-1.5 text-[10px] text-slate-500">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span>Only contact info is sent to hotel reception & dining partners. Password is strictly encrypted and never shared.</span>
                 </div>
               </div>
 

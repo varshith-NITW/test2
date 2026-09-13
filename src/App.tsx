@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { PersonaType, Navbar } from './components/Navbar';
-import { TouristSpot, Hotel, Guide, Restaurant, Booking, RoomType, GuidePackageType } from './types';
+import { TouristSpot, Hotel, Guide, Restaurant, Booking, RoomType, GuidePackageType, UserProfile } from './types';
 import { INITIAL_TOURIST_SPOTS, INITIAL_HOTELS, INITIAL_GUIDES, INITIAL_RESTAURANTS } from './data/mockData';
 import { TravelerHome } from './components/traveler/TravelerHome';
 import { GuideAddonModal } from './components/traveler/GuideAddonModal';
 import { CheckoutModal } from './components/traveler/CheckoutModal';
 import { HotelPartnerPortal } from './components/hotel/HotelPartnerPortal';
 import { LocalGuidePortal } from './components/guide/LocalGuidePortal';
+import { AuthModal } from './components/auth/AuthModal';
+import { getCurrentUser, logOut } from './services/authService';
 import { calculateSplitBreakdown } from './services/paymentSplitService';
 import { createBookingViaNodeAPI } from './services/apiClient';
 import { loadGoogleMapsScript } from './services/googleMapsService';
 
 export function App() {
   const [currentPersona, setCurrentPersona] = useState<PersonaType>('traveler');
+  
+  // Traveler Authentication State
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => getCurrentUser());
+  const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; tab: 'login' | 'signup' }>({
+    isOpen: false,
+    tab: 'login'
+  });
 
   // Load Google Maps API script on application mount
   useEffect(() => {
@@ -49,6 +58,11 @@ export function App() {
         nights: 2
       },
       guests: 2,
+      // Traveler Details (Safely dispatched to Hotel Reception & Restaurant Concierge; NO password)
+      travelerName: 'Varshith Sharma',
+      travelerEmail: 'varshith@example.com',
+      travelerPhone: '+91 98490 12345',
+      travelerLocation: 'Surat, Gujarat',
       guideId: INITIAL_GUIDES[2].id,
       guideName: INITIAL_GUIDES[2].name,
       guidePackageType: 'half_day',
@@ -109,9 +123,15 @@ export function App() {
       guidePackageTitle: newBooking.guidePackageTitle,
       razorpayPaymentId: newBooking.razorpayPaymentId,
       razorpayOrderId: newBooking.razorpayOrderId,
-      websiteDiscountAmount: newBooking.websiteDiscountAmount
+      websiteDiscountAmount: newBooking.websiteDiscountAmount,
+      // Pass safe traveler details (strictly excluding sensitive credentials)
+      travelerName: newBooking.travelerName || currentUser?.username || 'Varshith Sharma',
+      travelerEmail: newBooking.travelerEmail || currentUser?.email || 'varshith@example.com',
+      travelerPhone: newBooking.travelerPhone || currentUser?.phoneNumber || '+91 98490 12345',
+      travelerLocation: newBooking.travelerLocation || currentUser?.location || 'Surat, Gujarat'
     }).catch((err) => console.info('Booking API background sync:', err.message));
   };
+
 
   const handleRegisterNewHotel = (newHotel: Hotel) => {
     setHotels((prev) => [newHotel, ...prev]);
@@ -147,6 +167,12 @@ export function App() {
         onSelectPersona={(persona) => setCurrentPersona(persona)}
         bookingCount={bookings.length}
         onScrollToComparison={handleScrollToComparison}
+        currentUser={currentUser}
+        onOpenAuth={(tab) => setAuthModalState({ isOpen: true, tab: tab || 'login' })}
+        onSignOut={() => {
+          logOut();
+          setCurrentUser(null);
+        }}
       />
 
       {/* Main Persona View Container */}
@@ -162,6 +188,7 @@ export function App() {
             onBookingSuccess={handleBookingConfirmed}
             onAddSpot={handleAddSpot}
             onAddInventory={handleAddInventory}
+            currentUser={currentUser}
           />
         )}
 
@@ -210,6 +237,16 @@ export function App() {
           onBookingConfirmed={handleBookingConfirmed}
         />
       )}
+
+      {/* Traveler Authentication Modal (Sign Up with 5 terms / Sign In with 2 terms) */}
+      <AuthModal
+        isOpen={authModalState.isOpen}
+        initialTab={authModalState.tab}
+        onClose={() => setAuthModalState(prev => ({ ...prev, isOpen: false }))}
+        onAuthSuccess={(user) => {
+          setCurrentUser(user);
+        }}
+      />
 
       {/* Persistent Clean Footer */}
       <footer className="mt-auto border-t border-slate-200 bg-white py-6">
