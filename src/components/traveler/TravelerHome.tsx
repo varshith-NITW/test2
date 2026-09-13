@@ -144,6 +144,20 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
     }
   };
 
+  const handleAddHospitalityInventory = (newHotels: Hotel[], newRestaurants: Restaurant[]) => {
+    if (newHotels.length > 0) {
+      setSelectedHotel(newHotels[0]);
+      setSelectedRoom(newHotels[0].roomTypes[0]);
+    }
+    if (onAddInventory) {
+      onAddInventory({
+        hotels: newHotels,
+        restaurants: newRestaurants,
+        guides: []
+      });
+    }
+  };
+
   return (
     <div className="space-y-8 pb-16">
       
@@ -172,6 +186,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           onGeminiResultChange={handleGeminiResultChange}
           onSelectSpot={handleSelectSpot}
           onProceedToProximity={() => setCurrentStep('step2_proximity')}
+          onAddHospitalityInventory={handleAddHospitalityInventory}
         />
       )}
 

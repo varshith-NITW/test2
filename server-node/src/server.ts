@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDatabases, redisClient, pgPool } from './config/db.js';
 import { calculateMultiPartySplit } from './services/splitService.js';
+import { getPlacesRecommendations, getHospitalityRecommendations } from './services/geminiPlannerService.js';
 
 dotenv.config();
 
@@ -429,6 +430,29 @@ app.get('/api/system/status', (req: Request, res: Response) => {
     },
     googleMapsStatus: process.env.GOOGLE_MAPS_API_KEY ? 'Key Configured (Dual-Mode)' : 'Not Configured'
   });
+});
+
+// 12. Google Gemini Travel Planner Endpoints (from Gemini Share Integration)
+// Step 1: Recommend tourist places based on user preferences & opinions
+app.post('/api/recommend-places', async (req: Request, res: Response) => {
+  try {
+    const result = await getPlacesRecommendations(req.body);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error in /api/recommend-places:', error);
+    res.status(500).json({ error: 'Failed to generate destination recommendations', details: error.message });
+  }
+});
+
+// Step 2: Recommend hotels & restaurants for the selected destination
+app.post('/api/recommend-hospitality', async (req: Request, res: Response) => {
+  try {
+    const result = await getHospitalityRecommendations(req.body);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error in /api/recommend-hospitality:', error);
+    res.status(500).json({ error: 'Failed to generate hotels and restaurants', details: error.message });
+  }
 });
 
 // Start HTTP Server immediately

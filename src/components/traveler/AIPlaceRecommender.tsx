@@ -1,34 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { TouristSpot } from '../../types';
+import { TouristSpot, Hotel, Restaurant } from '../../types';
 import { 
   Sparkles, 
   MapPin, 
   Flame, 
   Clock, 
-  TrendingUp, 
   ShieldCheck, 
   ArrowRight, 
   Search, 
-  Volume2, 
-  Compass,
+  Compass, 
+  Bot, 
+  ExternalLink, 
+  Building2, 
+  Utensils, 
+  Calendar, 
+  Users, 
+  Wallet,
   CheckCircle2,
-  Bot,
-  Zap,
-  Info,
-  ChevronRight,
-  ExternalLink,
-  Key,
-  X,
   Check
 } from 'lucide-react';
-import { askGeminiTouristRecommendations, GeminiTouristRecommendation } from '../../services/geminiService';
 import { 
-  getGoogleMapsApiKey, 
-  setGoogleMapsApiKey, 
-  getMaskedApiKey, 
-  isCustomGoogleMapsApiKey,
-  geocodeLocationWithGoogleMaps
-} from '../../services/googleMapsService';
+  askGeminiTouristRecommendations, 
+  GeminiTouristRecommendation,
+  fetchGeminiDestinations,
+  fetchGeminiHospitality,
+  convertGeminiDestinationToSpot,
+  convertHospitalityHotelsToHotels,
+  convertHospitalityRestaurantsToRestaurants,
+  GeminiRecommendedDestination,
+  GeminiHospitalityResult
+} from '../../services/geminiService';
 
 interface AIPlaceRecommenderProps {
   spots: TouristSpot[];
@@ -39,6 +40,7 @@ interface AIPlaceRecommenderProps {
   onGeminiResultChange: (result: GeminiTouristRecommendation | null) => void;
   onSelectSpot: (spot: TouristSpot, searchedPlaceName?: string) => void;
   onProceedToProximity: () => void;
+  onAddHospitalityInventory?: (hotels: Hotel[], restaurants: Restaurant[]) => void;
 }
 
 export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
@@ -49,17 +51,24 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   onAiPromptChange,
   onGeminiResultChange,
   onSelectSpot,
-  onProceedToProximity
+  onProceedToProximity,
+  onAddHospitalityInventory
 }) => {
   const [selectedCity, setSelectedCity] = useState<string>('All');
   const [isGeminiThinking, setIsGeminiThinking] = useState<boolean>(false);
 
-  // Google Maps API Key Modal state
-  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
-  const [customKeyInput, setCustomKeyInput] = useState<string>(getGoogleMapsApiKey());
-  const [keySavedMessage, setKeySavedMessage] = useState<string>('');
-  const [testingKey, setTestingKey] = useState<boolean>(false);
-  const [testResult, setTestResult] = useState<string>('');
+  // Gemini 2-Step Workflow States (from Gemini Share Integration)
+  const [budgetTier, setBudgetTier] = useState<string>('Moderate');
+  const [durationDays, setDurationDays] = useState<number>(4);
+  const [companions, setCompanions] = useState<string>('Solo');
+
+  // Step 1: Gemini Recommended Destinations
+  const [geminiDestinations, setGeminiDestinations] = useState<GeminiRecommendedDestination[]>([]);
+  const [selectedDestinationName, setSelectedDestinationName] = useState<string>('');
+
+  // Step 2: Gemini Recommended Hospitality (Hotels & Restaurants)
+  const [hospitalityData, setHospitalityData] = useState<GeminiHospitalityResult | null>(null);
+  const [isLoadingHospitality, setIsLoadingHospitality] = useState<boolean>(false);
 
   const popularDestinations = [
     { name: 'Kochi', icon: '🌴', subtitle: 'Fort Kochi & Backwaters' },
@@ -73,62 +82,81 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   ];
 
   const suggestionChips = [
-    { label: '🌴 Kochi & Kerala', query: 'kochi' },
-    { label: '🏛️ Lucknow & Nawabi', query: 'lucknow' },
-    { label: '🕌 Delhi Heritage', query: 'delhi' },
-    { label: '🏖️ Goa Coastline', query: 'goa' },
-    { label: '👑 Jaipur Pink City', query: 'jaipur' },
-    { label: '🛕 Varanasi Ghats', query: 'varanasi' },
-    { label: '🏰 Hyderabad Forts', query: 'hyderabad' }
+    { label: '🌴 Kochi & Kerala Backwaters', query: 'I want calm scenic backwaters and beach lagoons with seafood' },
+    { label: '🏛️ Lucknow Nawabi Heritage', query: 'I love 18th-century architecture, labyrinth corridors and melt-in-mouth kebabs' },
+    { label: '🕌 Delhi Imperial Trail', query: 'Historic UNESCO minarets, grand forts and bustling food streets' },
+    { label: '🏖️ Goa Coastal Escape', query: 'Relaxed beaches with sunset shacks, Portuguese villas and fresh seafood' },
+    { label: '👑 Jaipur Pink City', query: 'Majestic hilltop forts with mirror palaces and vibrant handicraft bazaars' },
+    { label: '🛕 Varanasi Sacred Ghats', query: 'Spiritual riverfront ghats with evening oil lamp aarti and morning classical music' }
   ];
 
-  // Debounced live search as user types into the destination search bar
-  useEffect(() => {
-    const trimmed = aiPrompt.trim();
-    if (!trimmed) {
-      onGeminiResultChange(null);
-      setIsGeminiThinking(false);
-      return;
+  // Fetch hospitality (hotels & restaurants) for a selected destination
+  const fetchAndApplyHospitality = async (destName: string, spot: TouristSpot) => {
+    setIsLoadingHospitality(true);
+    setSelectedDestinationName(destName);
+    try {
+      const data = await fetchGeminiHospitality({
+        destinationName: destName,
+        userBudget: budgetTier,
+        foodPreferences: 'Local cuisines and popular dining'
+      });
+      setHospitalityData(data);
+
+      if (onAddHospitalityInventory && data.hotels.length > 0) {
+        const platformHotels = convertHospitalityHotelsToHotels(data.hotels, spot);
+        const platformRestaurants = convertHospitalityRestaurantsToRestaurants(data.restaurants, spot);
+        onAddHospitalityInventory(platformHotels, platformRestaurants);
+      }
+    } catch (err) {
+      console.warn('Error fetching hospitality recommendations:', err);
+    } finally {
+      setIsLoadingHospitality(false);
     }
+  };
 
-    if (trimmed.length >= 2) {
-      setIsGeminiThinking(true);
-      const timer = setTimeout(async () => {
-        try {
-          const res = await askGeminiTouristRecommendations(trimmed, spots);
-          onGeminiResultChange(res);
-          if (res.matchedSpots && res.matchedSpots.length > 0) {
-            const topSpot = res.matchedSpots[0];
-            const placeName = res.destinationName || trimmed;
-            onSelectSpot(topSpot, placeName);
-          }
-        } catch (err) {
-          console.warn('Gemini live query error:', err);
-        } finally {
-          setIsGeminiThinking(false);
-        }
-      }, 300);
-
-      return () => clearTimeout(timer);
-    }
-  }, [aiPrompt, spots]);
-
-  const handleAskGemini = async (customQuery?: string) => {
+  // Main 2-Step Gemini Search Handler
+  const handleFindPlaces = async (customQuery?: string) => {
     const q = (customQuery !== undefined ? customQuery : aiPrompt).trim();
     if (!q) {
       onGeminiResultChange(null);
+      setGeminiDestinations([]);
+      setHospitalityData(null);
       setIsGeminiThinking(false);
       return;
     }
+
     setIsGeminiThinking(true);
     setSelectedCity('All');
+    setHospitalityData(null);
+
     try {
-      const res = await askGeminiTouristRecommendations(q, spots);
-      onGeminiResultChange(res);
-      if (res.matchedSpots && res.matchedSpots.length > 0) {
-        const topSpot = res.matchedSpots[0];
-        const placeName = res.destinationName || q;
+      // 1. Call Gemini structured API endpoint (/api/recommend-places)
+      const placesPromise = fetchGeminiDestinations({
+        preferences: q,
+        budget: budgetTier,
+        days: durationDays,
+        companions
+      });
+
+      // 2. Call local footfall engine in parallel
+      const footfallPromise = askGeminiTouristRecommendations(q, spots);
+
+      const [destResult, footfallResult] = await Promise.all([placesPromise, footfallPromise]);
+
+      setGeminiDestinations(destResult.destinations);
+      onGeminiResultChange(footfallResult);
+
+      // Automatically select the first destination and fetch its hotels & restaurants
+      if (destResult.destinations.length > 0) {
+        const topDest = destResult.destinations[0];
+        const spot = convertGeminiDestinationToSpot(topDest, 0);
+        onSelectSpot(spot, topDest.name);
+        fetchAndApplyHospitality(topDest.name, spot);
+      } else if (footfallResult.matchedSpots.length > 0) {
+        const topSpot = footfallResult.matchedSpots[0];
+        const placeName = footfallResult.destinationName || q;
         onSelectSpot(topSpot, placeName);
+        fetchAndApplyHospitality(placeName, topSpot);
       }
     } catch (err) {
       console.warn('Gemini query error:', err);
@@ -139,10 +167,16 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
 
   const handleChipClick = (query: string) => {
     onAiPromptChange(query);
-    handleAskGemini(query);
+    handleFindPlaces(query);
   };
 
-  // Determine spots to display - strictly empty if no search query executed!
+  const handleSelectDestinationCard = (dest: GeminiRecommendedDestination, idx: number) => {
+    const spot = convertGeminiDestinationToSpot(dest, idx);
+    onSelectSpot(spot, dest.name);
+    fetchAndApplyHospitality(dest.name, spot);
+  };
+
+  // Determine spots to display
   const displaySpots = (geminiResult && geminiResult.matchedSpots && geminiResult.matchedSpots.length > 0)
     ? geminiResult.matchedSpots.filter(spot => {
         if (selectedCity !== 'All' && spot.city.toLowerCase() !== selectedCity.toLowerCase()) {
@@ -155,15 +189,15 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   return (
     <div className="space-y-8">
       
-      {/* Gemini AI Header Section */}
+      {/* Gemini AI Header & Input Section */}
       <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 text-white rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden border border-indigo-900/50">
         
-        {/* Glowing animated background orb */}
+        {/* Glowing background orb */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-500/20 via-purple-500/15 to-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl">
           
-          {/* Google Gemini AI Model & Google Maps Badges */}
+          {/* Badge */}
           <div className="flex flex-wrap items-center gap-2.5 mb-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 border border-indigo-400/40 text-indigo-300 text-xs font-extrabold shadow-sm">
               <Bot className="w-4 h-4 text-indigo-400 animate-pulse" />
@@ -171,30 +205,30 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
             </div>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-3">
-            Ask Gemini AI: Where Should You Travel?
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-2">
+            Where would you like to go?
           </h1>
           
           <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-6">
-            Describe your dream trip in natural language. Google Gemini evaluates our physical footfall graph to recommend spots ranked strictly by <strong className="text-emerald-400">verified check-in numbers</strong> — <em>never by fake or bought 1-5 star ratings</em>.
+            Share your travel preferences, budget, and companion plans. Google Gemini evaluates authentic check-ins to recommend top tourist destinations, then curates the best hotels and local dining.
           </p>
 
-          {/* Gemini AI Search Prompt Input */}
+          {/* Gemini AI Multi-line Prompt & Opinion Form */}
           <form 
             onSubmit={(e) => {
               e.preventDefault();
-              handleAskGemini();
+              handleFindPlaces();
             }}
-            className="relative flex flex-col sm:flex-row items-stretch gap-2.5"
+            className="space-y-4"
           >
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-400" />
-              <input
-                type="text"
+            <div className="relative">
+              <textarea
+                id="prefs"
+                rows={3}
                 value={aiPrompt}
                 onChange={(e) => onAiPromptChange(e.target.value)}
-                placeholder="Ask Gemini: e.g., 'Recommend historic forts and food streets with high check-ins'..."
-                className="w-full pl-12 pr-10 py-3.5 bg-white/10 hover:bg-white/15 focus:bg-white text-white focus:text-slate-900 placeholder:text-slate-400 rounded-2xl border border-indigo-400/30 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 text-sm backdrop-blur-md transition-all shadow-inner"
+                placeholder="e.g., I want calm, scenic mountain places with lakes, moderate budget for 4 days..."
+                className="w-full p-4 bg-white/10 hover:bg-white/15 focus:bg-slate-900 text-white placeholder:text-slate-400 rounded-2xl border border-indigo-400/30 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 text-sm backdrop-blur-md transition-all shadow-inner resize-none"
               />
               {aiPrompt && (
                 <button
@@ -202,36 +236,115 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                   onClick={() => {
                     onAiPromptChange('');
                     onGeminiResultChange(null);
-                    onSelectSpot(spots[0], '');
+                    setGeminiDestinations([]);
+                    setHospitalityData(null);
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white px-2 py-1 rounded-md bg-white/10 cursor-pointer"
+                  className="absolute right-3 bottom-3 text-xs text-slate-400 hover:text-white px-2.5 py-1 rounded-md bg-white/10 cursor-pointer"
                 >
                   Clear
                 </button>
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={isGeminiThinking}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all shrink-0 cursor-pointer disabled:opacity-60"
-            >
-              {isGeminiThinking ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Gemini Reasoning...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>Ask Gemini AI</span>
-                </>
-              )}
-            </button>
+            {/* Travel Parameters (Budget, Duration, Companions) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Budget */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 text-xs text-slate-300 font-semibold mb-1.5">
+                  <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Budget:</span>
+                </div>
+                <div className="flex gap-1">
+                  {(['Budget', 'Moderate', 'Luxury'] as const).map(b => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => setBudgetTier(b)}
+                      className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold transition-all ${
+                        budgetTier === b 
+                          ? 'bg-emerald-500 text-white shadow-sm' 
+                          : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                      }`}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Duration */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 text-xs text-slate-300 font-semibold mb-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Duration:</span>
+                </div>
+                <div className="flex gap-1">
+                  {[2, 3, 4, 7].map(d => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDurationDays(d)}
+                      className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold transition-all ${
+                        durationDays === d 
+                          ? 'bg-sky-500 text-white shadow-sm' 
+                          : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                      }`}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Companions */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-2.5">
+                <div className="flex items-center gap-1.5 text-xs text-slate-300 font-semibold mb-1.5">
+                  <Users className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Traveling With:</span>
+                </div>
+                <div className="flex gap-1">
+                  {(['Solo', 'Couple', 'Family', 'Friends'] as const).map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCompanions(c)}
+                      className={`flex-1 py-1 px-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                        companions === c 
+                          ? 'bg-indigo-500 text-white shadow-sm' 
+                          : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Find Places Button */}
+            <div className="flex justify-end pt-1">
+              <button
+                type="submit"
+                disabled={isGeminiThinking}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-emerald-600 hover:from-indigo-500 hover:to-emerald-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all cursor-pointer disabled:opacity-60"
+              >
+                {isGeminiThinking ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Gemini is Finding Places...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>Find Places with Gemini</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
 
-          {/* Suggestion Chips */}
-          <div className="flex flex-wrap items-center gap-2 mt-4">
+          {/* Quick Prompts Chips */}
+          <div className="flex flex-wrap items-center gap-2 mt-5">
             <span className="text-xs text-slate-400 font-medium">Quick Prompts:</span>
             {suggestionChips.map((chip, idx) => (
               <button
@@ -253,32 +366,32 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
         <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-8 sm:p-12 text-center border border-indigo-800/60 shadow-xl space-y-3">
           <div className="w-9 h-9 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto text-indigo-400" />
           <h3 className="text-base sm:text-lg font-bold text-white">
-            Gemini 2.5 Flash is analyzing verified check-in footfalls for &ldquo;{aiPrompt}&rdquo;...
+            Gemini 2.5 Flash is analyzing your preferences: &ldquo;{aiPrompt}&rdquo;...
           </h3>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Evaluating physical GPS &amp; Google Place check-in velocity &bull; Bypassing manipulated star ratings
+            Structuring destinations with verified check-ins &bull; Curating hotels and local dining
           </p>
         </div>
       )}
 
-      {/* Initial Empty State - before traveler searches */}
-      {!isGeminiThinking && !geminiResult && (
+      {/* Initial Empty State (before user searches) */}
+      {!isGeminiThinking && !geminiResult && geminiDestinations.length === 0 && (
         <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 sm:p-12 border border-slate-800 text-center space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto shadow-inner">
             <Compass className="w-7 h-7" />
           </div>
           <div className="max-w-lg mx-auto">
             <h3 className="text-lg sm:text-xl font-bold text-white">
-              Search Any Destination to View Verified Places
+              Describe Your Ideal Trip Above to Start
             </h3>
             <p className="text-xs sm:text-sm text-slate-400 mt-1.5 leading-relaxed">
-              Type any tourist city above (e.g., <strong className="text-emerald-400">Kochi</strong>, <strong className="text-indigo-400">Lucknow</strong>, <strong className="text-sky-400">Goa</strong>, <strong className="text-amber-400">Delhi</strong>) or click a destination below to discover authentic spots ranked strictly by real check-in footfalls.
+              Tell Gemini your travel opinion or click a popular destination below. Gemini will recommend top places and curates hotels and restaurants once a place is chosen.
             </p>
           </div>
 
           {/* Quick Popular Destination Badges */}
           <div className="pt-2">
-            <div className="text-xs text-slate-400 font-semibold mb-3">Popular Destinations (Click to search):</div>
+            <div className="text-xs text-slate-400 font-semibold mb-3">Popular Destinations (Click to explore):</div>
             <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
               {popularDestinations.map((dest, idx) => (
                 <button
@@ -296,35 +409,250 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
         </div>
       )}
 
-      {/* No Results Found State */}
-      {!isGeminiThinking && geminiResult && displaySpots.length === 0 && (
-        <div className="bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 sm:p-12 border border-slate-800 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
-            <MapPin className="w-6 h-6" />
+      {/* STEP 1: Gemini Recommended Destinations Grid */}
+      {!isGeminiThinking && geminiDestinations.length > 0 && (
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-indigo-800/60 shadow-xl space-y-5">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-900/60 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md">
+                <Sparkles className="w-4 h-4 text-amber-200" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <span>Step 1: Select a Destination</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Gemini 2.5 Flash
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-300">
+                  Recommended based on your preferences &bull; Ranked by verified check-in footfalls
+                </p>
+              </div>
+            </div>
+
+            <span className="text-xs text-emerald-400 font-bold self-start sm:self-auto bg-emerald-950/60 px-3 py-1.5 rounded-lg border border-emerald-800/40">
+              {geminiDestinations.length} Tailored Options
+            </span>
           </div>
-          <h3 className="text-base sm:text-lg font-bold text-white">
-            No tourist places found matching &ldquo;{geminiResult.query}&rdquo;
-          </h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
-            {geminiResult.geminiReasoning || 'Try searching for a destination like Kochi, Lucknow, Delhi, Goa, Jaipur, or Varanasi.'}
-          </p>
-          <div className="pt-2 flex flex-wrap justify-center gap-2">
-            {popularDestinations.slice(0, 5).map((dest, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleChipClick(dest.name)}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition-colors cursor-pointer"
-              >
-                {dest.icon} {dest.name}
-              </button>
-            ))}
+
+          {/* Destinations Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {geminiDestinations.map((dest, idx) => {
+              const isSelected = selectedDestinationName.toLowerCase().includes(dest.name.toLowerCase()) ||
+                dest.name.toLowerCase().includes(selectedDestinationName.toLowerCase());
+
+              return (
+                <div
+                  key={idx}
+                  className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-emerald-950/50 border-emerald-400 ring-2 ring-emerald-400/60 shadow-lg'
+                      : 'bg-slate-800/80 border-slate-700/80 hover:border-indigo-400'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <h4 className="text-base font-bold text-white">{dest.name}</h4>
+                        <span className="text-xs text-indigo-300 font-medium">{dest.stateOrCountry}</span>
+                      </div>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        #{idx + 1}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-300 leading-relaxed mb-3">
+                      {dest.shortDescription}
+                    </p>
+
+                    {/* Highlights */}
+                    <div className="space-y-1.5 mb-3">
+                      <div className="text-[11px] font-semibold text-slate-400">Highlights:</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {dest.highlights.map((h, hIdx) => (
+                          <span
+                            key={hIdx}
+                            className="text-[11px] px-2 py-0.5 rounded-md bg-indigo-950/60 text-indigo-200 border border-indigo-800/50 font-medium"
+                          >
+                            &bull; {h}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Best Time */}
+                    {dest.bestTimeToVisit && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-amber-300 font-medium mb-3">
+                        <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>Best time: {dest.bestTimeToVisit}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Select Destination Button */}
+                  <div className="pt-3 border-t border-slate-700/60">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectDestinationCard(dest, idx)}
+                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md'
+                          : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                      }`}
+                    >
+                      {isSelected ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                          <span>Selected Destination</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Select {dest.name.split('&')[0].trim()}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
+
         </div>
       )}
 
-      {/* Live Gemini AI Intelligence Response Card */}
-      {!isGeminiThinking && geminiResult && displaySpots.length > 0 && (
+      {/* STEP 2: Gemini Recommended Hospitality (Hotels & Restaurants) */}
+      {isLoadingHospitality && (
+        <div className="bg-slate-900 text-white rounded-3xl p-8 text-center border border-indigo-900 shadow-xl space-y-2">
+          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto text-emerald-400" />
+          <h4 className="text-sm font-bold text-white">
+            Gemini is finding top stays &amp; dining for &ldquo;{selectedDestinationName}&rdquo;...
+          </h4>
+          <p className="text-xs text-slate-400">
+            Querying /api/recommend-hospitality with structured JSON schema
+          </p>
+        </div>
+      )}
+
+      {!isLoadingHospitality && hospitalityData && (
+        <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 border border-emerald-800/50 shadow-2xl space-y-6">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold mb-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Step 2: Recommended Stays &amp; Dining</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-extrabold text-white">
+                Recommendations for {hospitalityData.destinationName}
+              </h3>
+            </div>
+
+            <button
+              type="button"
+              onClick={onProceedToProximity}
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer self-start sm:self-auto"
+            >
+              <span>Explore in Proximity Radar (Step 2)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Recommended Hotels */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-200">
+              <Building2 className="w-4 h-4 text-sky-400" />
+              <span>Recommended Hotels ({hospitalityData.hotels.length})</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {hospitalityData.hotels.map((h, idx) => (
+                <div key={idx} className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <h5 className="text-xs font-bold text-white">{h.name}</h5>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 shrink-0">
+                      {h.category}
+                    </span>
+                  </div>
+
+                  <div className="text-xs font-extrabold text-emerald-400">
+                    {h.priceRange}
+                  </div>
+
+                  <div className="text-[11px] text-slate-300">
+                    <strong className="text-slate-400">Area:</strong> {h.locationArea}
+                  </div>
+
+                  {h.features && h.features.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {h.features.slice(0, 3).map((f, fIdx) => (
+                        <span key={fIdx} className="text-[10px] px-2 py-0.5 rounded bg-slate-700/60 text-slate-300">
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recommended Restaurants & Cafes */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-200">
+              <Utensils className="w-4 h-4 text-amber-400" />
+              <span>Recommended Restaurants &amp; Cafes ({hospitalityData.restaurants.length})</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {hospitalityData.restaurants.map((r, idx) => (
+                <div key={idx} className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <h5 className="text-xs font-bold text-white">{r.name}</h5>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                      {r.cuisineType.split('&')[0].trim()}
+                    </span>
+                  </div>
+
+                  {r.mustTryDishes && r.mustTryDishes.length > 0 && (
+                    <div className="text-[11px] text-slate-300">
+                      <strong className="text-amber-300">Must try:</strong> {r.mustTryDishes.join(', ')}
+                    </div>
+                  )}
+
+                  {r.atmosphere && (
+                    <div className="text-[11px] text-slate-400 italic line-clamp-2">
+                      &ldquo;{r.atmosphere}&rdquo;
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Action */}
+          <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs text-slate-400 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Hotels and restaurants are synced with Proximity Radar &amp; Smart Split Checkout.</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={onProceedToProximity}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+            >
+              <span>Proceed to Proximity Radar &bull; Step 2</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+        </div>
+      )}
+
+      {/* Classic Footfalls Places Grid (when searching specific spots) */}
+      {!isGeminiThinking && geminiResult && displaySpots.length > 0 && geminiDestinations.length === 0 && (
         <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 sm:p-6 border border-indigo-800/60 shadow-xl space-y-4">
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-900/60 pb-3">
@@ -349,12 +677,6 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
               <span className="text-[11px] font-mono text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg">
                 Model: {geminiResult.model}
               </span>
-              {geminiResult.googleMapsSource && (
-                <span className="text-[11px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-700/60 px-2.5 py-1 rounded-lg flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-emerald-400" />
-                  <span>{geminiResult.googleMapsSource}</span>
-                </span>
-              )}
             </div>
           </div>
 
@@ -364,39 +686,12 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
               ✨ <strong className="text-indigo-300">Gemini Analysis:</strong> {geminiResult.geminiReasoning}
             </p>
 
-            {/* Why Checkins Banner inside Gemini response */}
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-300 text-xs">
-              <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
-              <div>
-                <strong className="text-emerald-200">Gemini Ground-Truth Rule:</strong> {geminiResult.whyCheckinsUsed}
-              </div>
-            </div>
-
-            {/* Gemini Crowd Forecast & Insider Tip */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-                <div className="font-bold text-amber-300 flex items-center gap-1.5 mb-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>Gemini Crowd & Timing Forecast:</span>
-                </div>
-                <p className="text-slate-300 leading-normal">{geminiResult.crowdAdvice}</p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-                <div className="font-bold text-indigo-300 flex items-center gap-1.5 mb-1">
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>Gemini Local Insider Advice:</span>
-                </div>
-                <p className="text-slate-300 leading-normal">{geminiResult.insiderTip}</p>
-              </div>
-            </div>
-
-            {/* Gemini Recommended Places Grid inside Gemini Card */}
+            {/* Places Grid */}
             <div className="pt-3 border-t border-indigo-900/50">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Gemini Recommended Destinations (Ranked by Check-in Footfalls):</span>
+                  <span>Destinations (Ranked by Check-in Footfalls):</span>
                 </span>
                 <span className="text-[11px] text-emerald-400 font-semibold">
                   Zero Star-Rating Bias &bull; Real Footfalls
@@ -410,7 +705,10 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                   return (
                     <div
                       key={spot.id}
-                      onClick={() => onSelectSpot(spot, geminiResult?.destinationName || aiPrompt || spot.city)}
+                      onClick={() => {
+                        onSelectSpot(spot, geminiResult?.destinationName || aiPrompt || spot.city);
+                        fetchAndApplyHospitality(geminiResult?.destinationName || spot.city, spot);
+                      }}
                       className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                         isSelected
                           ? 'bg-emerald-950/60 border-emerald-400 ring-1 ring-emerald-400 shadow-md'
@@ -444,29 +742,13 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                         </p>
                       </div>
 
-                      {/* Google Maps link & Selection buttons */}
                       <div className="space-y-2 mt-2 pt-2.5 border-t border-slate-700/60">
-                        {/* Direct Google Maps Navigation Link */}
-                        <a
-                          href={spot.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${spot.name} ${spot.city}`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full py-1.5 px-3 rounded-lg bg-slate-700/70 hover:bg-slate-700 hover:text-white text-indigo-200 text-[11px] font-semibold flex items-center justify-between transition-all border border-slate-600/60 group shadow-sm"
-                          title={`Open ${spot.name} in Google Maps`}
-                        >
-                          <span className="flex items-center gap-1.5 truncate">
-                            <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                            <span className="truncate">View on Google Maps</span>
-                          </span>
-                          <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors shrink-0" />
-                        </a>
-
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             onSelectSpot(spot, geminiResult?.destinationName || aiPrompt || spot.city);
+                            fetchAndApplyHospitality(geminiResult?.destinationName || spot.city, spot);
                             onProceedToProximity();
                           }}
                           className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
@@ -487,127 +769,6 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
 
           </div>
 
-        </div>
-      )}
-
-      {/* Google Maps API Key Configuration Modal */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 text-white shadow-2xl space-y-4 relative">
-            <button
-              type="button"
-              onClick={() => {
-                setShowKeyModal(false);
-                setTestResult('');
-                setKeySavedMessage('');
-              }}
-              className="absolute right-4 top-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 flex items-center justify-center">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Google Maps API Configuration</h3>
-                <p className="text-xs text-slate-400">
-                  Powers real-time geolocation, places search, and navigation for Gemini
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300 block">
-                Google Maps API Key (VITE_GOOGLE_MAPS_API_KEY):
-              </label>
-              <input
-                type="text"
-                value={customKeyInput}
-                onChange={(e) => setCustomKeyInput(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <span className="text-[11px] text-slate-400 block">
-                Current active key: <strong className="text-emerald-400">{getMaskedApiKey()}</strong>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                disabled={testingKey}
-                onClick={async () => {
-                  setTestingKey(true);
-                  setTestResult('');
-                  try {
-                    const loc = await geocodeLocationWithGoogleMaps('Kochi');
-                    setTestResult(`✅ Geocoding Connected! Resolved ${loc.cityName} (${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}) via ${loc.source}`);
-                  } catch (err: any) {
-                    setTestResult(`⚠️ Note: ${err?.message || 'Geocoding active with smart fallback'}`);
-                  } finally {
-                    setTestingKey(false);
-                  }
-                }}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer"
-              >
-                {testingKey ? 'Testing Connection...' : 'Test Location Geocoding'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomKeyInput('AIzaSyCGSg1tsQTyEA5uJnS3R0ndTaK-l6cAE8A');
-                  setGoogleMapsApiKey('AIzaSyCGSg1tsQTyEA5uJnS3R0ndTaK-l6cAE8A');
-                  setTestResult('Reset to Project Default Key.');
-                }}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer"
-              >
-                Reset Default Key
-              </button>
-            </div>
-
-            {testResult && (
-              <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-emerald-300">
-                {testResult}
-              </div>
-            )}
-
-            {keySavedMessage && (
-              <div className="p-2.5 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-xs text-emerald-300">
-                {keySavedMessage}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowKeyModal(false);
-                  setTestResult('');
-                  setKeySavedMessage('');
-                }}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setGoogleMapsApiKey(customKeyInput);
-                  setKeySavedMessage('Google Maps API Key saved! Gemini will use this key for all locations.');
-                  setTimeout(() => {
-                    setKeySavedMessage('');
-                    setShowKeyModal(false);
-                  }, 1200);
-                }}
-                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/30 cursor-pointer"
-              >
-                Save & Apply Key
-              </button>
-            </div>
-          </div>
         </div>
       )}
 

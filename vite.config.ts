@@ -14,6 +14,10 @@ export default defineConfig({
         target: 'https://maps.googleapis.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/google-maps/, '')
+      },
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
       }
     }
   }
