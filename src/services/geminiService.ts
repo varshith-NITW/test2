@@ -1322,7 +1322,9 @@ export async function fetchGeminiHospitality(params: {
 
   // Targeted Fallback
   const lower = (params.destinationName || '').toLowerCase();
-  if (lower.includes('surat')) {
+  const isSurat = lower.includes('surat') || lower.includes('dumas') || lower.includes('castle') || 
+                  lower.includes('tapi') || lower.includes('gopi') || lower.includes('chauta') || lower.includes('locho');
+  if (isSurat) {
     return {
       destinationName: 'Surat',
       hotels: [
@@ -1396,32 +1398,32 @@ export async function fetchGeminiHospitality(params: {
     destinationName: params.destinationName,
     hotels: [
       {
-        name: `${title} Grand Heritage Palace`,
+        name: `The ${title} Grand Hotel & Suites`,
         category: 'Heritage Luxury',
-        priceRange: '₹7,500 - ₹12,000 / night',
-        features: ['Verified Check-In Footfalls', 'Courtyard Swimming Pool', 'Complimentary Breakfast'],
+        priceRange: '₹5,500 - ₹9,500 / night',
+        features: ['City View Rooms', 'On-site Multi-Cuisine Dining', 'Free Wi-Fi', '24/7 Front Desk'],
         locationArea: `Central ${title}`
       },
       {
-        name: `${title} Boutique Suites`,
+        name: `Hotel Residency ${title}`,
         category: 'Boutique Stay',
-        priceRange: '₹4,200 - ₹6,500 / night',
-        features: ['Historic Old Town Access', 'Complimentary Wi-Fi', 'Terrace Garden'],
-        locationArea: `Old Town ${title}`
+        priceRange: '₹3,200 - ₹5,200 / night',
+        features: ['Complimentary Breakfast', 'High-Speed Wi-Fi', 'Travel Desk Assistance'],
+        locationArea: `Main Commercial Hub, ${title}`
       }
     ],
     restaurants: [
       {
-        name: `${title} Royal Heritage Kitchen`,
-        cuisineType: `Authentic Regional & Traditional ${title} Specialties`,
-        mustTryDishes: ['Signature Regional Thali', 'Wood-Fired Specialties', 'Traditional Dessert'],
-        atmosphere: 'Lively, authentic ambiance favored by local diners'
+        name: `${title} Traditional Dining Hall`,
+        cuisineType: `Authentic Regional Specialties of ${title}`,
+        mustTryDishes: ['Signature Local Thali', 'Special Fresh Bread Platter', 'Traditional Dessert'],
+        atmosphere: 'Warm family-friendly dining with authentic recipes'
       },
       {
-        name: `The Old ${title} Spice Cafe`,
+        name: `The Corner Spice Cafe (${title})`,
         cuisineType: 'Artisan Cafe & Street Gastronomy',
-        mustTryDishes: ['Freshly Brewed Beverage', 'Crispy Savory Fritters'],
-        atmosphere: 'Relaxed gathering spot favored by travelers and photographers'
+        mustTryDishes: ['Freshly Brewed Chai & Coffee', 'Crisp Savory Snacks', 'Special Evening Bites'],
+        atmosphere: 'Relaxed gathering spot favored by travelers'
       }
     ],
     source: 'gemini-targeted-city-engine'

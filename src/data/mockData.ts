@@ -248,6 +248,80 @@ export const INITIAL_TOURIST_SPOTS: TouristSpot[] = [
 
 export const INITIAL_HOTELS: Hotel[] = [
   {
+    id: 'hotel-surat-marriott',
+    name: 'Surat Marriott Hotel',
+    city: 'Surat',
+    address: 'Ambika Niketan, Athwalines, Surat, Gujarat 395007',
+    location: { lat: 21.1718, lng: 72.7933 },
+    tier: 'Heritage Luxury',
+    pricePerNight: 8500,
+    commissionRate: 0.15,
+    status: 'verified',
+    allowsIndependentGuides: true,
+    perks: ['Tapi Riverfront Views', 'Outdoor Pool', '24/7 Fine Dining', 'Free High-Speed Wi-Fi'],
+    amenities: ['Riverview Suites', 'Outdoor Swimming Pool', 'Spa & Wellness', 'Fitness Center', 'Complimentary Breakfast'],
+    checkinCount: 32000,
+    weeklyCheckins: 780,
+    footfallRank: 1,
+    googlePlaceId: 'ChIJ_surat_marriott',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Surat+Marriott+Hotel',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80',
+    businessRegNumber: 'GSTIN24AAACT8812K1Z5',
+    partnershipModel: 'hybrid',
+    guideReferralKickbackPercent: 7.0,
+    roomTypes: [
+      {
+        id: 'sm-deluxe-river',
+        name: 'Deluxe Tapi Riverview Room',
+        pricePerNight: 8500,
+        capacity: 2,
+        description: 'Luxurious room overlooking the calm Tapi riverfront with plush bedding and marble bath.',
+        perks: ['Buffet Breakfast Included', 'High-Speed Wi-Fi', 'Complimentary Bottled Water']
+      },
+      {
+        id: 'sm-executive-suite',
+        name: 'Executive Riverfront Suite',
+        pricePerNight: 14500,
+        capacity: 3,
+        description: 'Spacious suite with separate living parlor, panoramic river sunset vistas, and lounge privileges.',
+        perks: ['Executive Lounge Access', 'Evening Cocktails', 'Late Checkout Priority']
+      }
+    ]
+  },
+  {
+    id: 'hotel-surat-lords-plaza',
+    name: 'Lords Plaza Surat',
+    city: 'Surat',
+    address: 'Delhi Gate, Ring Road, Surat, Gujarat 395003',
+    location: { lat: 21.2045, lng: 72.8398 },
+    tier: 'Boutique Stay',
+    pricePerNight: 3800,
+    commissionRate: 0.12,
+    status: 'verified',
+    allowsIndependentGuides: true,
+    perks: ['Blue Coriander Fine Dining', 'Surat Railway Station Proximity', 'Free Wi-Fi'],
+    amenities: ['Free Wi-Fi', 'Multi-Cuisine Restaurant', 'Fitness Center', 'Travel Desk'],
+    checkinCount: 21500,
+    weeklyCheckins: 540,
+    footfallRank: 2,
+    googlePlaceId: 'ChIJ_lords_plaza_surat',
+    googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Lords+Plaza+Surat',
+    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80',
+    businessRegNumber: 'GSTIN24BBBCD4412P2Q1',
+    partnershipModel: 'community_pool',
+    guideReferralKickbackPercent: 6.5,
+    roomTypes: [
+      {
+        id: 'lp-deluxe',
+        name: 'Executive Deluxe Room',
+        pricePerNight: 3800,
+        capacity: 2,
+        description: 'Modern room in the heart of Surat commercial district with work desk and cozy bedding.',
+        perks: ['Breakfast Included', 'Free Wi-Fi', 'Tea/Coffee Maker']
+      }
+    ]
+  },
+  {
     id: 'hotel-taj-falaknuma',
     name: 'Taj Falaknuma Palace (Mirror in the Sky)',
     city: 'Hyderabad',

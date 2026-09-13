@@ -130,6 +130,58 @@ export const GLOBAL_DESTINATIONS: Record<string, {
       }
     ]
   },
+  'surat': {
+    name: 'Surat Castle & Tapi Riverfront',
+    city: 'Surat',
+    country: 'India',
+    location: { lat: 21.1702, lng: 72.8311 },
+    category: '16th-Century Fortress & Tapi Riverside',
+    monthlyCheckins: 185000,
+    highlight: 'Historic 1546 riverside fortress, Dumas black sand beach, and world-famous street food culture',
+    catchyLine: 'Silk, diamonds, historic Tapi breezes, and legendary Surti Locho.',
+    bestPic: 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1400&q=85',
+    survivalPhrases: [
+      { phrase: 'Hello / Greetings', translation: 'Kem Chho? (કેમ છો?)', pronunciation: 'Kem cho?', context: 'Gujarati greeting' },
+      { phrase: 'Where is hot Locho?', translation: 'Garam Locho kya male? (ગરમ લોચો ક્યાં મળે?)', pronunciation: 'Guh-rum lo-cho kyah muh-lay?', context: 'Street food finding' },
+      { phrase: 'Thank you', translation: 'Aabhar (આભાર)', pronunciation: 'Ah-bhar', context: 'Expressing thanks' }
+    ],
+    foodMustEats: [
+      { name: 'Butter Cheese Surti Locho', spot: 'Jaani Locho House (Athwalines / Nanpura)', tip: 'Top with sev, spicy cilantro chutney, and special locho masala.' },
+      { name: 'Authentic Gujarati Thali & Undhiyu', spot: 'Sasumaa Gujarati Thali', tip: 'Unlimited feast served with sweet Gujarati kadhi, rotli, and farsaans.' }
+    ],
+    culturalTips: [
+      'Surat is celebrated across India for food culture: "Surat nu jaman ane Kashi nu maran".',
+      'Evenings at Dumas Beach and Tapi Riverfront are best for fresh breezes.'
+    ],
+    commuteTips: {
+      autoFare: '₹50-120 across central city routes.',
+      metroAvailable: false,
+      localAdvice: 'BRTS buses connect Athwalines, Station Road, and Dumas Road efficiently.'
+    },
+    languages: ['Gujarati', 'Hindi', 'English'],
+    hotelThemes: [
+      { name: 'Surat Marriott Hotel', tier: 'Heritage Luxury', basePrice: 8500, perks: ['Tapi Riverfront Views', 'Outdoor Pool', '24/7 Fine Dining'], image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80' },
+      { name: 'The Grand Bhagwati Surat', tier: 'Heritage Luxury', basePrice: 6500, perks: ['Palatial Architecture', 'Pure Veg Royal Feast', 'Club Amenities'], image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1000&q=80' },
+      { name: 'Lords Plaza Surat', tier: 'Boutique Stay', basePrice: 3800, perks: ['Central Delhi Gate Location', 'Blue Coriander Dining', 'Railway Access'], image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1000&q=80' },
+      { name: 'Courtyard by Marriott Surat', tier: 'Heritage Luxury', basePrice: 5800, perks: ['Airport & Dumas Road Access', 'Outdoor Pool', 'Business Lounge'], image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1000&q=80' }
+    ],
+    guideProfiles: [
+      { name: 'Bhavesh Patel', title: 'Tapi River Heritage & Surat Castle Curator', specialties: ['Surat Castle', 'Dutch & British Cemeteries', 'Tapi History'], languages: ['Gujarati', 'Hindi', 'English'], fee: 1400 },
+      { name: 'Kavita Shah', title: 'Zari Textile Weavers & Street Gastronomy Guide', specialties: ['Chauta Bazaar Silk Walk', 'Surti Street Food Tour', 'Gopi Talav'], languages: ['Gujarati', 'Hindi', 'English'], fee: 1200 }
+    ],
+    itineraryDays: [
+      {
+        title: 'Historic Surat Castle & Street Food Heritage',
+        activities: [
+          '09:00 AM: Explore 16th-century ramparts and cannons at Surat Castle overlooking Tapi river',
+          '11:30 AM: Walk the ancient spice and silk alleys of Chauta Bazaar',
+          '01:00 PM: Royal multi-course feast at Sasumaa Gujarati Thali',
+          '05:30 PM: Black sand sunset and hot Lashkari tomato bhajiyas at Dumas Beach'
+        ],
+        localTip: 'Try A-One Cold Coco near Chowk Bazaar after your heritage castle walk.'
+      }
+    ]
+  },
   'hyderabad': {
     name: 'Charminar & Old City Bazaars',
     city: 'Hyderabad',
