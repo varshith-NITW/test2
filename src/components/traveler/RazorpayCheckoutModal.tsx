@@ -33,6 +33,7 @@ import { calculateSplitBreakdown } from '../../services/paymentSplitService';
 
 interface RazorpayCheckoutModalProps {
   spot: TouristSpot;
+  searchedPlace?: string;
   hotel: Hotel;
   selectedRoom: RoomType;
   nights: number;
@@ -49,6 +50,7 @@ type RazorpayMethod = 'upi' | 'card' | 'netbanking' | 'qr' | 'emi';
 
 export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
   spot,
+  searchedPlace,
   hotel,
   selectedRoom,
   nights,
@@ -147,7 +149,7 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
         splitBreakdown: split,
         status: 'confirmed',
         createdAt: new Date().toISOString(),
-        touristSpotName: spot.name,
+        touristSpotName: searchedPlace ? `${searchedPlace} (${spot.name})` : spot.name,
         meetingPointInfo: `Hotel Concierge Desk / ${spot.name} Main Gate at 09:30 AM`
       };
 
@@ -234,7 +236,7 @@ export const RazorpayCheckoutModal: React.FC<RazorpayCheckoutModalProps> = ({
                 <div className="flex justify-between items-start border-b border-slate-800 pb-4 mb-4">
                   <div>
                     <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Official Digital Pass</span>
-                    <h4 className="text-lg font-black">{spot.name} Experience</h4>
+                    <h4 className="text-lg font-black">{searchedPlace ? `${searchedPlace} (${spot.name})` : `${spot.name} Experience`}</h4>
                     <span className="text-xs text-slate-400">{hotel.city} &bull; 2 Guests &bull; {nights} Nights</span>
                   </div>
                   <div className="w-14 h-14 bg-white p-1 rounded-xl flex items-center justify-center">

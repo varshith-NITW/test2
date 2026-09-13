@@ -18,6 +18,7 @@ import { RazorpayCheckoutModal } from './RazorpayCheckoutModal';
 import { WhyBetterShowcase } from '../comparison/WhyBetterShowcase';
 import { generateProximityInventoryForSpot } from '../../services/placesService';
 import { calculateHaversineDistance } from '../../services/spatialService';
+import { GeminiTouristRecommendation } from '../../services/geminiService';
 
 interface TravelerHomeProps {
   spots: TouristSpot[];
@@ -42,6 +43,11 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
   // Step layer state
   const [currentStep, setCurrentStep] = useState<StepLayer>('step1_spots');
 
+  // User searched/typed place in Gemini AI box & AI State
+  const [searchedPlace, setSearchedPlace] = useState<string>('');
+  const [aiPrompt, setAiPrompt] = useState<string>('');
+  const [geminiResult, setGeminiResult] = useState<GeminiTouristRecommendation | null>(null);
+
   // Selected trip state
   const [selectedSpotId, setSelectedSpotId] = useState<string>(spots[0]?.id || '');
   const [activeSpotOverride, setActiveSpotOverride] = useState<TouristSpot | null>(null);
@@ -61,7 +67,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
 
   const selectedSpot = activeSpotOverride || spots.find(s => s.id === selectedSpotId) || spots[0];
 
-  const handleSelectSpot = (spotOrId: TouristSpot | string) => {
+  const handleSelectSpot = (spotOrId: TouristSpot | string, customPlaceName?: string) => {
     let spot: TouristSpot | undefined;
     if (typeof spotOrId === 'string') {
       spot = spots.find(s => s.id === spotOrId);
@@ -73,6 +79,10 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
 
     setSelectedSpotId(spot.id);
     setActiveSpotOverride(spot);
+
+    if (customPlaceName !== undefined) {
+      setSearchedPlace(customPlaceName);
+    }
 
     if (onAddSpot && !spots.some(s => s.id === spot!.id)) {
       onAddSpot(spot);
@@ -95,6 +105,22 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
       }
       setSelectedHotel(dynamicInv.hotels[0]);
       setSelectedRoom(dynamicInv.hotels[0].roomTypes[0]);
+    }
+  };
+
+  const handleAiPromptChange = (prompt: string) => {
+    setAiPrompt(prompt);
+    if (prompt.trim()) {
+      setSearchedPlace(prompt.trim());
+    }
+  };
+
+  const handleGeminiResultChange = (result: GeminiTouristRecommendation | null) => {
+    setGeminiResult(result);
+    if (result && result.matchedSpots && result.matchedSpots.length > 0) {
+      const topSpot = result.matchedSpots[0];
+      const placeName = result.destinationName || result.query || topSpot.city;
+      handleSelectSpot(topSpot, placeName);
     }
   };
 
@@ -140,6 +166,10 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
         <AIPlaceRecommender
           spots={spots}
           selectedSpotId={selectedSpotId}
+          aiPrompt={aiPrompt}
+          geminiResult={geminiResult}
+          onAiPromptChange={handleAiPromptChange}
+          onGeminiResultChange={handleGeminiResultChange}
           onSelectSpot={handleSelectSpot}
           onProceedToProximity={() => setCurrentStep('step2_proximity')}
         />
@@ -149,6 +179,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
       {currentStep === 'step2_proximity' && selectedSpot && (
         <ProximityRadarView
           selectedSpot={selectedSpot}
+          searchedPlace={searchedPlace}
           hotels={hotels}
           restaurants={restaurants}
           guides={guides}
@@ -169,6 +200,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
       {currentStep === 'step3_summary' && selectedSpot && selectedHotel && selectedRoom && (
         <TripPackageSummary
           spot={selectedSpot}
+          searchedPlace={searchedPlace}
           hotel={selectedHotel}
           room={selectedRoom}
           nights={nights}
@@ -188,6 +220,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
       {showRazorpayModal && selectedSpot && selectedHotel && selectedRoom && (
         <RazorpayCheckoutModal
           spot={selectedSpot}
+          searchedPlace={searchedPlace}
           hotel={selectedHotel}
           selectedRoom={selectedRoom}
           nights={nights}

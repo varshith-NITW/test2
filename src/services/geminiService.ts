@@ -790,6 +790,7 @@ export async function generateGeminiRecommendations(params: {
 
 export interface GeminiTouristRecommendation {
   query: string;
+  destinationName?: string;
   geminiReasoning: string;
   whyCheckinsUsed: string;
   matchedSpots: TouristSpot[];
@@ -827,6 +828,7 @@ export async function askGeminiTouristRecommendations(
   if (!query || query.length === 0) {
     return {
       query: '',
+      destinationName: '',
       geminiReasoning: 'Type any destination or tourist city in the search box to discover places ranked strictly by verified check-in footfalls.',
       whyCheckinsUsed: 'Gemini ranks destinations by verified GPS/Google Place check-ins and footfall velocity, eliminating rating manipulation.',
       matchedSpots: [],
@@ -907,6 +909,7 @@ export async function askGeminiTouristRecommendations(
 
     return {
       query: userQuery,
+      destinationName: cityName,
       geminiReasoning: `Gemini evaluated verified physical check-in footprints across ${cityName}. Ranked strictly by real traveler visits (up to ${topCheckin} monthly check-ins) — bypassing sponsored star ratings to deliver authentic ground truth.`,
       whyCheckinsUsed: `Gemini filtered ${cityName} using verified GPS/Google Maps check-in velocity. Every destination is ranked by real physical footfalls.`,
       matchedSpots: citySpots,
@@ -939,6 +942,7 @@ export async function askGeminiTouristRecommendations(
     const reasoning = `Gemini matched ${matchedExisting.length} verified destinations for "${userQuery}", accessed via Google Maps Location Engine and ranked by physical monthly check-in footfalls.`;
     return {
       query: userQuery,
+      destinationName: matchedExisting[0]?.city || userQuery,
       geminiReasoning: reasoning,
       whyCheckinsUsed: 'Gemini eliminated manipulable star ratings in favor of verified physical footfall check-ins, ensuring authentic traveler ground truth.',
       matchedSpots: matchedExisting,
@@ -966,6 +970,7 @@ export async function askGeminiTouristRecommendations(
 
     return {
       query: userQuery,
+      destinationName: destName,
       geminiReasoning: `Gemini accessed "${destName}" via Google Maps Location Engine. Ranked ${dynamicSpots.length} attractions strictly by verified check-in velocity and real footfall density, bypassing commercial rating bias.`,
       whyCheckinsUsed: 'Gemini connects with the Google Maps API key to verify physical coordinates and footfall check-ins, delivering authentic ground truth.',
       matchedSpots: dynamicSpots,
@@ -1029,6 +1034,7 @@ export async function askGeminiTouristRecommendations(
   if (finalSpots.length === 0) {
     return {
       query: userQuery,
+      destinationName: userQuery,
       geminiReasoning: `Gemini scanned verified check-in records but found no tourist places matching "${userQuery}". Try searching for specific destinations like Kochi, Lucknow, Delhi, Goa, Jaipur, or Varanasi.`,
       whyCheckinsUsed: 'Gemini evaluates strictly verified physical footfall check-ins.',
       matchedSpots: [],
@@ -1043,6 +1049,7 @@ export async function askGeminiTouristRecommendations(
 
   return {
     query: userQuery,
+    destinationName: finalSpots[0]?.city || userQuery,
     geminiReasoning: reasoning,
     whyCheckinsUsed: 'Gemini ranks destinations by verified GPS/Google Place check-ins and footfall velocity. This eliminates rating manipulation and guarantees ground truth.',
     matchedSpots: finalSpots,

@@ -33,20 +33,26 @@ import {
 interface AIPlaceRecommenderProps {
   spots: TouristSpot[];
   selectedSpotId: string;
-  onSelectSpot: (spot: TouristSpot) => void;
+  aiPrompt: string;
+  geminiResult: GeminiTouristRecommendation | null;
+  onAiPromptChange: (prompt: string) => void;
+  onGeminiResultChange: (result: GeminiTouristRecommendation | null) => void;
+  onSelectSpot: (spot: TouristSpot, searchedPlaceName?: string) => void;
   onProceedToProximity: () => void;
 }
 
 export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   spots,
   selectedSpotId,
+  aiPrompt,
+  geminiResult,
+  onAiPromptChange,
+  onGeminiResultChange,
   onSelectSpot,
   onProceedToProximity
 }) => {
-  const [aiPrompt, setAiPrompt] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('All');
   const [isGeminiThinking, setIsGeminiThinking] = useState<boolean>(false);
-  const [geminiResult, setGeminiResult] = useState<GeminiTouristRecommendation | null>(null);
 
   // Google Maps API Key Modal state
   const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
@@ -80,7 +86,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   useEffect(() => {
     const trimmed = aiPrompt.trim();
     if (!trimmed) {
-      setGeminiResult(null);
+      onGeminiResultChange(null);
       setIsGeminiThinking(false);
       return;
     }
@@ -90,7 +96,12 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
       const timer = setTimeout(async () => {
         try {
           const res = await askGeminiTouristRecommendations(trimmed, spots);
-          setGeminiResult(res);
+          onGeminiResultChange(res);
+          if (res.matchedSpots && res.matchedSpots.length > 0) {
+            const topSpot = res.matchedSpots[0];
+            const placeName = res.destinationName || trimmed;
+            onSelectSpot(topSpot, placeName);
+          }
         } catch (err) {
           console.warn('Gemini live query error:', err);
         } finally {
@@ -105,7 +116,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   const handleAskGemini = async (customQuery?: string) => {
     const q = (customQuery !== undefined ? customQuery : aiPrompt).trim();
     if (!q) {
-      setGeminiResult(null);
+      onGeminiResultChange(null);
       setIsGeminiThinking(false);
       return;
     }
@@ -113,7 +124,12 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
     setSelectedCity('All');
     try {
       const res = await askGeminiTouristRecommendations(q, spots);
-      setGeminiResult(res);
+      onGeminiResultChange(res);
+      if (res.matchedSpots && res.matchedSpots.length > 0) {
+        const topSpot = res.matchedSpots[0];
+        const placeName = res.destinationName || q;
+        onSelectSpot(topSpot, placeName);
+      }
     } catch (err) {
       console.warn('Gemini query error:', err);
     } finally {
@@ -122,7 +138,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
   };
 
   const handleChipClick = (query: string) => {
-    setAiPrompt(query);
+    onAiPromptChange(query);
     handleAskGemini(query);
   };
 
@@ -186,7 +202,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
               <input
                 type="text"
                 value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
+                onChange={(e) => onAiPromptChange(e.target.value)}
                 placeholder="Ask Gemini: e.g., 'Recommend historic forts and food streets with high check-ins'..."
                 className="w-full pl-12 pr-10 py-3.5 bg-white/10 hover:bg-white/15 focus:bg-white text-white focus:text-slate-900 placeholder:text-slate-400 rounded-2xl border border-indigo-400/30 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 text-sm backdrop-blur-md transition-all shadow-inner"
               />
@@ -194,10 +210,11 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setAiPrompt('');
-                    handleAskGemini('');
+                    onAiPromptChange('');
+                    onGeminiResultChange(null);
+                    onSelectSpot(spots[0], '');
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white px-2 py-1 rounded-md bg-white/10"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-white px-2 py-1 rounded-md bg-white/10 cursor-pointer"
                 >
                   Clear
                 </button>
@@ -403,7 +420,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                   return (
                     <div
                       key={spot.id}
-                      onClick={() => onSelectSpot(spot)}
+                      onClick={() => onSelectSpot(spot, geminiResult?.destinationName || aiPrompt || spot.city)}
                       className={`p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                         isSelected
                           ? 'bg-emerald-950/60 border-emerald-400 ring-1 ring-emerald-400 shadow-md'
@@ -459,7 +476,7 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSelectSpot(spot);
+                            onSelectSpot(spot, geminiResult?.destinationName || aiPrompt || spot.city);
                             onProceedToProximity();
                           }}
                           className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${

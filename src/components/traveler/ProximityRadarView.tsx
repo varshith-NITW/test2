@@ -34,6 +34,7 @@ import {
 
 interface ProximityRadarViewProps {
   selectedSpot: TouristSpot;
+  searchedPlace?: string;
   hotels: Hotel[];
   restaurants: Restaurant[];
   guides: Guide[];
@@ -53,6 +54,7 @@ interface ProximityRadarViewProps {
 
 export const ProximityRadarView: React.FC<ProximityRadarViewProps> = ({
   selectedSpot,
+  searchedPlace,
   hotels,
   restaurants,
   guides,
@@ -156,10 +158,10 @@ export const ProximityRadarView: React.FC<ProximityRadarViewProps> = ({
             <div>
               <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>Epocenter: {selectedSpot.city}</span>
+                <span>Epicenter: {selectedSpot.city}</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-                Proximity Radar: {selectedSpot.name}
+                Proximity Radar: {searchedPlace && searchedPlace.trim() ? `${searchedPlace.trim()} (${selectedSpot.name})` : selectedSpot.name}
               </h2>
             </div>
           </div>

@@ -32,6 +32,7 @@ import {
 
 interface TripPackageSummaryProps {
   spot: TouristSpot;
+  searchedPlace?: string;
   hotel: Hotel;
   room: RoomType;
   nights: number;
@@ -44,6 +45,7 @@ interface TripPackageSummaryProps {
 
 export const TripPackageSummary: React.FC<TripPackageSummaryProps> = ({
   spot,
+  searchedPlace,
   hotel,
   room,
   nights,
@@ -109,19 +111,48 @@ export const TripPackageSummary: React.FC<TripPackageSummaryProps> = ({
       </div>
 
       {/* Page Title & Mission */}
-      <div className="text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-[11px] font-extrabold uppercase tracking-wider mb-2">
-          <Zap className="w-3.5 h-3.5 text-blue-600" />
-          <span>Step 3: Direct-Supplier Smart Package</span>
-        </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">
-          Your Customized & Affordable Package for {spot.name}
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500">
-          We eliminated the 22% OTA commissions from Booking.com & MakeMyTrip and aggregated direct local discounts so 
-          <strong className="text-slate-800"> anyone can afford to travel</strong> with certified safety and authentic local experiences.
-        </p>
-      </div>
+      {(() => {
+        const formatDestination = (str: string) => {
+          if (!str) return '';
+          return str
+            .trim()
+            .split(/\s+/)
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ');
+        };
+
+        const displayDestination = searchedPlace && searchedPlace.trim()
+          ? formatDestination(searchedPlace)
+          : spot.name;
+
+        const hasDifferentSpot = Boolean(
+          searchedPlace && 
+          searchedPlace.trim() && 
+          spot.name.toLowerCase() !== searchedPlace.trim().toLowerCase()
+        );
+
+        return (
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-[11px] font-extrabold uppercase tracking-wider mb-2">
+              <Zap className="w-3.5 h-3.5 text-blue-600" />
+              <span>Step 3: Direct-Supplier Smart Package</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">
+              Your Customized & Affordable Package for {displayDestination}
+            </h2>
+            {hasDifferentSpot && (
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full mb-3">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Epicenter Spot: {spot.name} ({spot.city})</span>
+              </div>
+            )}
+            <p className="text-xs sm:text-sm text-slate-500">
+              We eliminated the 22% OTA commissions from Booking.com & MakeMyTrip and aggregated direct local discounts so 
+              <strong className="text-slate-800"> anyone can afford to travel</strong> with certified safety and authentic local experiences.
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Affordability Tier Switcher & Max Discount Master Toggle */}
       <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-7 shadow-xl border border-indigo-500/30 relative overflow-hidden">
