@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  X, 
-  Lock, 
-  Mail, 
-  User, 
-  Phone, 
-  MapPin, 
-  ShieldCheck, 
-  ArrowRight, 
-  CheckCircle2, 
+import {
+  X,
+  Lock,
+  Mail,
+  User,
+  Phone,
+  MapPin,
+  ShieldCheck,
+  ArrowRight,
+  CheckCircle2,
   AlertCircle,
   Sparkles,
   Eye,
@@ -49,11 +49,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleFillDemo = () => {
     if (activeTab === 'signup') {
-      setUsername('Varshith Sharma');
+      setUsername('Varshith');
       setEmail(`varshith.${Math.floor(Math.random() * 900 + 100)}@example.com`);
       setPassword('password123');
       setPhoneNumber('+91 98490 12345');
-      setLocation('Surat, Gujarat');
+      setLocation('Surat');
     } else {
       setEmail('varshith@example.com');
       setPassword('demo12345');
@@ -139,7 +139,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden relative my-8 animate-in zoom-in-95 duration-200">
-        
+
         {/* Top Header */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white p-6 relative">
           <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {activeTab === 'login' ? 'Welcome Back Traveler' : 'Create Traveler Account'}
             </h3>
             <p className="text-xs text-slate-300 mt-1">
-              {activeTab === 'login' 
+              {activeTab === 'login'
                 ? 'Sign in with your email and password to access bookings.'
                 : 'Sign up with your details. Phone & location are dispatched to booked stays for reception check-in.'}
             </p>
@@ -177,22 +177,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               type="button"
               onClick={() => { setActiveTab('login'); setError(null); }}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === 'login' 
-                  ? 'bg-white text-slate-900 shadow-sm' 
+              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${activeTab === 'login'
+                  ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-300 hover:text-white'
-              }`}
+                }`}
             >
               Sign In (Email + Password)
             </button>
             <button
               type="button"
               onClick={() => { setActiveTab('signup'); setError(null); }}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === 'signup' 
-                  ? 'bg-white text-slate-900 shadow-sm' 
+              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${activeTab === 'signup'
+                  ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-300 hover:text-white'
-              }`}
+                }`}
             >
               Sign Up (5 Required Terms)
             </button>

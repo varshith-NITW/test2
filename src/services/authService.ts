@@ -30,8 +30,7 @@ export const DEFAULT_USER: UserProfile = {
  */
 export function getCurrentUser(): UserProfile | null {
   try {
-    // Check cloud mirror in session memory
-    const raw = sessionStorage.getItem('travelai_active_cloud_user');
+    const raw = sessionStorage.getItem('travelai_active_cloud_user') || localStorage.getItem('travelai_auth_traveler');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.email && parsed.username) {
@@ -42,9 +41,7 @@ export function getCurrentUser(): UserProfile | null {
     // Fall through
   }
 
-  // Pre-seed default demo traveler
-  sessionStorage.setItem('travelai_active_cloud_user', JSON.stringify(DEFAULT_USER));
-  return DEFAULT_USER;
+  return null;
 }
 
 /**
@@ -240,6 +237,8 @@ export async function logOut(): Promise<void> {
     // Fall through
   }
   try {
+    sessionStorage.removeItem('travelai_active_cloud_user');
+    localStorage.removeItem('travelai_auth_traveler');
     await setActiveCloudSession(null);
   } catch (e) {
     console.warn('Error during cloud logout:', e);

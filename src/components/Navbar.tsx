@@ -214,14 +214,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => onOpenAuth?.('login')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-sm shadow-indigo-600/20 cursor-pointer"
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    <span>Sign In</span>
-                  </button>
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-bold">
+                    <Lock className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>View Locked</span>
+                  </span>
                 )}
               </div>
             )}

@@ -3,6 +3,7 @@ import { PersonaType, Navbar } from './components/Navbar';
 import { TouristSpot, Hotel, Guide, Restaurant, Booking, RoomType, GuidePackageType, UserProfile } from './types';
 import { INITIAL_TOURIST_SPOTS, INITIAL_HOTELS, INITIAL_GUIDES, INITIAL_RESTAURANTS } from './data/mockData';
 import { TravelerHome } from './components/traveler/TravelerHome';
+import { TravelerAuthGate } from './components/traveler/TravelerAuthGate';
 import { GuideAddonModal } from './components/traveler/GuideAddonModal';
 import { CheckoutModal } from './components/traveler/CheckoutModal';
 import { HotelPartnerPortal } from './components/hotel/HotelPartnerPortal';
@@ -285,18 +286,30 @@ export function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         
         {currentPersona === 'traveler' && (
-          <TravelerHome
-            spots={spots}
-            hotels={hotels}
-            restaurants={restaurants}
-            guides={guides}
-            onSelectHotelForBooking={handleSelectHotelForBooking}
-            onBookingSuccess={handleBookingConfirmed}
-            onAddSpot={handleAddSpot}
-            onAddInventory={handleAddInventory}
-            currentUser={currentUser}
-            bookings={bookings}
-          />
+          currentUser ? (
+            <TravelerHome
+              spots={spots}
+              hotels={hotels}
+              restaurants={restaurants}
+              guides={guides}
+              onSelectHotelForBooking={handleSelectHotelForBooking}
+              onBookingSuccess={handleBookingConfirmed}
+              onAddSpot={handleAddSpot}
+              onAddInventory={handleAddInventory}
+              currentUser={currentUser}
+              bookings={bookings}
+            />
+          ) : (
+            <TravelerAuthGate
+              onAuthSuccess={(user) => {
+                setCurrentUser(user);
+                try {
+                  localStorage.setItem('travelai_auth_traveler', JSON.stringify(user));
+                  sessionStorage.setItem('travelai_active_cloud_user', JSON.stringify(user));
+                } catch {}
+              }}
+            />
+          )
         )}
 
         {currentPersona === 'hotel' && (
