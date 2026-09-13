@@ -1158,6 +1158,13 @@ export async function askGeminiTouristRecommendations(
   };
 }
 
+export interface RecommendationScores {
+  photography: string | number;
+  history: string | number;
+  exploration: string | number;
+  budgetFriendly: string | number;
+}
+
 export interface GeminiRecommendedDestination {
   name: string;
   city?: string;
@@ -1167,6 +1174,7 @@ export interface GeminiRecommendedDestination {
   highlights: string[];
   latitude?: number;
   longitude?: number;
+  scores?: RecommendationScores;
 }
 
 export interface GeminiHospitalityHotel {
