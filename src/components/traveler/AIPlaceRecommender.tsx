@@ -169,16 +169,6 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
               <Bot className="w-4 h-4 text-indigo-400 animate-pulse" />
               <span>Powered by Google Gemini 2.5 Flash &bull; Real Check-In Footfall Engine</span>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setShowKeyModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-[1.02]"
-              title="Click to view or edit Google Maps API Key"
-            >
-              <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Google Maps API: Active ({getMaskedApiKey()})</span>
-            </button>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-3">
