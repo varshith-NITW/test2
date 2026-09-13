@@ -31,12 +31,12 @@ export function getActiveFirebaseConfig(): FirebaseProjectConfig {
   }
 
   return {
-    apiKey: (import.meta as any).env?.VITE_FIREBASE_API_KEY || 'AIzaSyTravelAI_Demo_Cloud_Key_84920',
-    authDomain: (import.meta as any).env?.VITE_FIREBASE_AUTH_DOMAIN || 'travelai-cloud-storage.firebaseapp.com',
-    projectId: (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || 'travelai-cloud-storage',
-    storageBucket: (import.meta as any).env?.VITE_FIREBASE_STORAGE_BUCKET || 'travelai-cloud-storage.appspot.com',
-    messagingSenderId: (import.meta as any).env?.VITE_FIREBASE_MESSAGING_SENDER_ID || '918273645012',
-    appId: (import.meta as any).env?.VITE_FIREBASE_APP_ID || '1:918273645012:web:a89b76c54d3e2f10'
+    apiKey: (import.meta as any).env?.VITE_FIREBASE_API_KEY || 'AIzaSyAZkj-NWz_sEnRkp8JSTuG4GL1mMBAvzu8',
+    authDomain: (import.meta as any).env?.VITE_FIREBASE_AUTH_DOMAIN || 'tourism-34722.firebaseapp.com',
+    projectId: (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || 'tourism-34722',
+    storageBucket: (import.meta as any).env?.VITE_FIREBASE_STORAGE_BUCKET || 'tourism-34722.firebasestorage.app',
+    messagingSenderId: (import.meta as any).env?.VITE_FIREBASE_MESSAGING_SENDER_ID || '567192662461',
+    appId: (import.meta as any).env?.VITE_FIREBASE_APP_ID || '1:567192662461:web:0e38549c7f22f3c891e2d4'
   };
 }
 
