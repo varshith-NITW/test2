@@ -907,6 +907,81 @@ function dedupeSpots(spots: TouristSpot[]): TouristSpot[] {
   return result;
 }
 
+const GEMINI_API_STORAGE_KEY = 'travelai_custom_gemini_api_key';
+
+export function getGeminiApiKey(): string {
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem(GEMINI_API_STORAGE_KEY);
+    if (custom && custom.trim().length > 5) {
+      return custom.trim();
+    }
+  }
+  return (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
+}
+
+export function setGeminiApiKey(key: string): void {
+  if (typeof window !== 'undefined') {
+    if (key && key.trim().length > 5) {
+      localStorage.setItem(GEMINI_API_STORAGE_KEY, key.trim());
+    } else {
+      localStorage.removeItem(GEMINI_API_STORAGE_KEY);
+    }
+  }
+}
+
+export function isCustomGeminiApiKey(): boolean {
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem(GEMINI_API_STORAGE_KEY);
+    return Boolean(custom && custom.trim().length > 5);
+  }
+  return false;
+}
+
+export function getMaskedGeminiApiKey(): string {
+  const key = getGeminiApiKey();
+  if (!key) return 'Not Configured (Free Gemini Footfall Engine)';
+  if (key.length <= 8) return '••••••••';
+  return `${key.slice(0, 6)}...${key.slice(-4)}`;
+}
+
+const LIVE_GEMINI_MODELS = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.5-flash'];
+
+/**
+ * Direct browser call to Google Generative Language API (Bypasses mockdata when key is present)
+ */
+export async function callGoogleGeminiLive(prompt: string, apiKey: string): Promise<any | null> {
+  if (!apiKey || apiKey.trim().length < 5) return null;
+
+  for (const model of LIVE_GEMINI_MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.4
+          }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          const parsed = JSON.parse(text);
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn(`Direct call to ${model} notice:`, err);
+    }
+  }
+  return null;
+}
+
 export async function askGeminiTouristRecommendations(
   userQuery: string,
   allSpots: TouristSpot[]
@@ -924,8 +999,48 @@ export async function askGeminiTouristRecommendations(
       suggestedActivities: [],
       insiderTip: 'Type any destination above to view recommended attractions.',
       crowdAdvice: 'Early morning visits before 09:30 AM typically feature the lowest visitor congestion.',
-      model: 'Google Gemini 2.5 Flash'
+      model: 'Google Gemini 3.6 Flash'
     };
+  }
+
+  // 0. If Gemini API Key is present, run 100% LIVE AI query
+  const apiKey = getGeminiApiKey();
+  if (apiKey) {
+    const liveInsightPrompt = `You are Google Gemini Travel Intelligence.
+A traveler asked: "${userQuery}".
+Provide live AI travel insight.
+Return STRICTLY a JSON object with this schema:
+{
+  "destinationName": "Exact City or Destination Name",
+  "geminiReasoning": "2 sentences explaining why this matches their intent and why physical check-ins guarantee ground truth",
+  "insiderTip": "1 actionable insider tip for this destination",
+  "crowdAdvice": "1 sentence advice on crowd-free visiting hours",
+  "suggestedActivities": ["Activity 1", "Activity 2", "Activity 3"]
+}`;
+
+    const liveInsight = await callGoogleGeminiLive(liveInsightPrompt, apiKey);
+    if (liveInsight && liveInsight.destinationName) {
+      const destResult = await fetchGeminiDestinations({ preferences: userQuery });
+      const convertedSpots = destResult.destinations.map((d, idx) => convertGeminiDestinationToSpot(d, idx));
+
+      return {
+        query: userQuery,
+        destinationName: liveInsight.destinationName,
+        geminiReasoning: liveInsight.geminiReasoning || `Gemini evaluated verified physical check-in footprints for "${userQuery}" in real-time.`,
+        whyCheckinsUsed: 'Gemini ranks destinations by verified Google Maps check-ins and footfall velocity, eliminating rating manipulation.',
+        matchedSpots: convertedSpots.length > 0 ? convertedSpots : allSpots.slice(0, 3),
+        suggestedActivities: liveInsight.suggestedActivities || [
+          `Morning exploration when footfall is at its lowest`,
+          `Local culinary and street gastronomy discovery with verified partners`,
+          `Historic architecture and monument exploration with certified guides`
+        ],
+        insiderTip: liveInsight.insiderTip || 'Arrive early to avoid crowd congestion and get the best photography light.',
+        crowdAdvice: liveInsight.crowdAdvice || 'Early morning visits before 09:30 AM feature significantly lower visitor density.',
+        model: 'Google Gemini 3.6 Flash (Live AI)',
+        googleMapsSource: 'Google Maps Places API',
+        googleMapsKeyStatus: `Active (${getMaskedApiKey()})`
+      };
+    }
   }
 
   // 1. Check if user query specifies a known city from CITY_TOURIST_PLACES or aliases
@@ -1203,84 +1318,6 @@ export interface GeminiHospitalityResult {
   hotels: GeminiHospitalityHotel[];
   restaurants: GeminiHospitalityRestaurant[];
   source?: string;
-}
-
-/**
- * Calls backend /api/recommend-places endpoint (with Gemini 2.5 Flash Structured Outputs)
- */
-const GEMINI_API_STORAGE_KEY = 'travelai_custom_gemini_api_key';
-
-export function getGeminiApiKey(): string {
-  if (typeof window !== 'undefined') {
-    const custom = localStorage.getItem(GEMINI_API_STORAGE_KEY);
-    if (custom && custom.trim().length > 5) {
-      return custom.trim();
-    }
-  }
-  return (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
-}
-
-export function setGeminiApiKey(key: string): void {
-  if (typeof window !== 'undefined') {
-    if (key && key.trim().length > 5) {
-      localStorage.setItem(GEMINI_API_STORAGE_KEY, key.trim());
-    } else {
-      localStorage.removeItem(GEMINI_API_STORAGE_KEY);
-    }
-  }
-}
-
-export function isCustomGeminiApiKey(): boolean {
-  if (typeof window !== 'undefined') {
-    const custom = localStorage.getItem(GEMINI_API_STORAGE_KEY);
-    return Boolean(custom && custom.trim().length > 5);
-  }
-  return false;
-}
-
-export function getMaskedGeminiApiKey(): string {
-  const key = getGeminiApiKey();
-  if (!key) return 'Not Configured (Free Gemini Footfall Engine)';
-  if (key.length <= 8) return '••••••••';
-  return `${key.slice(0, 6)}...${key.slice(-4)}`;
-}
-
-const LIVE_GEMINI_MODELS = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-2.5-flash'];
-
-/**
- * Direct browser call to Google Generative Language API (Bypasses mockdata when key is present)
- */
-export async function callGoogleGeminiLive(prompt: string, apiKey: string): Promise<any | null> {
-  if (!apiKey || apiKey.trim().length < 5) return null;
-
-  for (const model of LIVE_GEMINI_MODELS) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.4
-          }
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          const parsed = JSON.parse(text);
-          return parsed;
-        }
-      }
-    } catch (err) {
-      console.warn(`Direct call to ${model} notice:`, err);
-    }
-  }
-  return null;
 }
 
 /**
