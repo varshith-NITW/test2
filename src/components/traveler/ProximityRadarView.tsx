@@ -11,7 +11,8 @@ import {
 import { 
   filterHotelsByRadius, 
   filterRestaurantsByRadius, 
-  filterGuidesByProximity 
+  filterGuidesByProximity,
+  calculateHaversineDistance
 } from '../../services/spatialService';
 import { generateProximityInventoryForSpot } from '../../services/placesService';
 import { InteractiveMap } from '../common/InteractiveMap';
@@ -77,48 +78,106 @@ export const ProximityRadarView: React.FC<ProximityRadarViewProps> = ({
     return generateProximityInventoryForSpot(selectedSpot);
   }, [selectedSpot]);
 
-  // Merge parent state with spot-specific inventory
+  // Filter and prioritize properties strictly matching the selected spot's destination
   const allAvailableHotels = useMemo(() => {
-    const combined = [...hotels];
-    for (const h of dynamicFallback.hotels) {
-      if (!combined.some(existing => existing.id === h.id)) {
-        combined.push(h);
+    const spotCity = (selectedSpot.city || '').toLowerCase().trim();
+    
+    // 1. Check if authentic hotels exist that match this city or region
+    const authenticMatchingHotels = hotels.filter(h => {
+      const hCity = (h.city || '').toLowerCase().trim();
+      const hAddr = (h.address || '').toLowerCase();
+      if (spotCity && (hCity === spotCity || hCity.includes(spotCity) || spotCity.includes(hCity) || hAddr.includes(spotCity))) {
+        return true;
       }
+      // Or within geographic proximity (< 35km) and not from another distinct city
+      const dist = calculateHaversineDistance(selectedSpot.location, h.location);
+      if (dist <= 35) {
+        const otherKnown = ['surat', 'lucknow', 'hyderabad', 'delhi', 'goa', 'jaipur', 'agra'];
+        const isOther = otherKnown.some(oc => (hCity.includes(oc) || hAddr.includes(oc)) && !spotCity.includes(oc));
+        return !isOther;
+      }
+      return false;
+    });
+
+    // If authentic Gemini or real partner hotels exist (non-synthetic), use ONLY them!
+    const realHotels = authenticMatchingHotels.filter(h => !h.id.startsWith('hotel-dyn-'));
+    if (realHotels.length > 0) {
+      return realHotels;
     }
-    return combined;
-  }, [hotels, dynamicFallback]);
+
+    if (authenticMatchingHotels.length > 0) {
+      return authenticMatchingHotels;
+    }
+
+    // Only as fallback if zero hotels exist
+    return dynamicFallback.hotels;
+  }, [hotels, dynamicFallback, selectedSpot]);
 
   const allAvailableRestaurants = useMemo(() => {
-    const combined = [...restaurants];
-    for (const r of dynamicFallback.restaurants) {
-      if (!combined.some(existing => existing.id === r.id)) {
-        combined.push(r);
+    const spotCity = (selectedSpot.city || '').toLowerCase().trim();
+
+    const authenticMatchingRests = restaurants.filter(r => {
+      const rCity = (r.city || '').toLowerCase().trim();
+      const rAddr = (r.address || '').toLowerCase();
+      if (spotCity && (rCity === spotCity || rCity.includes(spotCity) || spotCity.includes(rCity) || rAddr.includes(spotCity))) {
+        return true;
       }
+      const dist = calculateHaversineDistance(selectedSpot.location, r.location);
+      if (dist <= 35) {
+        const otherKnown = ['surat', 'lucknow', 'hyderabad', 'delhi', 'goa', 'jaipur', 'agra'];
+        const isOther = otherKnown.some(oc => (rCity.includes(oc) || rAddr.includes(oc)) && !spotCity.includes(oc));
+        return !isOther;
+      }
+      return false;
+    });
+
+    const realRests = authenticMatchingRests.filter(r => !r.id.startsWith('rest-dyn-'));
+    if (realRests.length > 0) {
+      return realRests;
     }
-    return combined;
-  }, [restaurants, dynamicFallback]);
+
+    if (authenticMatchingRests.length > 0) {
+      return authenticMatchingRests;
+    }
+
+    return dynamicFallback.restaurants;
+  }, [restaurants, dynamicFallback, selectedSpot]);
 
   const allAvailableGuides = useMemo(() => {
-    const combined = [...guides];
-    for (const g of dynamicFallback.guides) {
-      if (!combined.some(existing => existing.id === g.id)) {
-        combined.push(g);
+    const spotCity = (selectedSpot.city || '').toLowerCase().trim();
+    
+    const matchingGuides = guides.filter(g => {
+      const bio = g.bio.toLowerCase();
+      const name = g.name.toLowerCase();
+      const verif = g.verificationId.toLowerCase();
+      if (spotCity && (bio.includes(spotCity) || name.includes(spotCity) || verif.includes(spotCity.slice(0, 3)))) {
+        return true;
       }
+      return false;
+    });
+
+    if (matchingGuides.length > 0) {
+      return matchingGuides;
     }
-    return combined;
-  }, [guides, dynamicFallback]);
+
+    return dynamicFallback.guides;
+  }, [guides, dynamicFallback, selectedSpot]);
 
   // Compute proximity items strictly based on selected tourist spot location
   const nearbyHotels = useMemo(() => {
     const filtered = filterHotelsByRadius(selectedSpot, allAvailableHotels, radiusKm);
     if (filtered.length > 0) return filtered;
-    return filterHotelsByRadius(selectedSpot, allAvailableHotels, 25);
+    const expanded = filterHotelsByRadius(selectedSpot, allAvailableHotels, 25);
+    if (expanded.length > 0) return expanded;
+    return filterHotelsByRadius(selectedSpot, allAvailableHotels, 60);
   }, [selectedSpot, allAvailableHotels, radiusKm]);
 
   const nearbyRestaurants = useMemo(() => {
     const filtered = filterRestaurantsByRadius(selectedSpot, allAvailableRestaurants, radiusKm);
     if (filtered.length > 0) return filtered;
-    return filterRestaurantsByRadius(selectedSpot, allAvailableRestaurants, 25);
+    const expanded = filterRestaurantsByRadius(selectedSpot, allAvailableRestaurants, 25);
+    if (expanded.length > 0) return expanded;
+    return filterRestaurantsByRadius(selectedSpot, allAvailableRestaurants, 60);
   }, [selectedSpot, allAvailableRestaurants, radiusKm]);
 
   const nearbyGuides = useMemo(() => {

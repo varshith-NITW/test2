@@ -5,6 +5,7 @@
  */
 
 import { TouristSpot, Hotel, Guide, Restaurant } from '../types';
+import { calculateHaversineDistance } from './spatialService';
 import { 
   searchGoogleMapsTouristAttractions, 
   getGoogleMapsApiKey, 
@@ -662,6 +663,39 @@ export const CITY_TOURIST_PLACES: Record<string, TouristPlaceItem[]> = {
 
 // Geographic Coordinates Knowledgebase for City Centering & PostGIS Geometry
 export const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  // Global Major Cities
+  'london': { lat: 51.5074, lng: -0.1278 },
+  'paris': { lat: 48.8566, lng: 2.3522 },
+  'tokyo': { lat: 35.6762, lng: 139.6503 },
+  'new york': { lat: 40.7128, lng: -74.0060 },
+  'dubai': { lat: 25.2048, lng: 55.2708 },
+  'singapore': { lat: 1.3521, lng: 103.8198 },
+  'rome': { lat: 41.9028, lng: 12.4964 },
+  'barcelona': { lat: 41.3879, lng: 2.1699 },
+  'amsterdam': { lat: 52.3676, lng: 4.9041 },
+  'berlin': { lat: 52.5200, lng: 13.4050 },
+  'sydney': { lat: -33.8688, lng: 151.2093 },
+  'bali': { lat: -8.4095, lng: 115.1889 },
+  'bangkok': { lat: 13.7563, lng: 100.5018 },
+  'cairo': { lat: 30.0444, lng: 31.2357 },
+  'istanbul': { lat: 41.0082, lng: 28.9784 },
+  'venice': { lat: 45.4408, lng: 12.3155 },
+  'toronto': { lat: 43.6532, lng: -79.3832 },
+  'vancouver': { lat: 49.2827, lng: -123.1207 },
+  'san francisco': { lat: 37.7749, lng: -122.4194 },
+  'los angeles': { lat: 34.0522, lng: -118.2437 },
+  'seoul': { lat: 37.5665, lng: 126.9780 },
+  'hong kong': { lat: 22.3193, lng: 114.1694 },
+  'zurich': { lat: 47.3769, lng: 8.5417 },
+  'vienna': { lat: 48.2082, lng: 16.3738 },
+  'prague': { lat: 50.0755, lng: 14.4378 },
+  'madrid': { lat: 40.4168, lng: -3.7038 },
+  'athens': { lat: 37.9838, lng: 23.7275 },
+  'florence': { lat: 43.7696, lng: 11.2558 },
+  'milan': { lat: 45.4642, lng: 9.1900 },
+  'edinburgh': { lat: 55.9533, lng: -3.1883 },
+  'dublin': { lat: 53.3498, lng: -6.2603 },
+  // Indian Cities
   'surat': { lat: 21.1702, lng: 72.8311 },
   'lucknow': { lat: 26.8690, lng: 80.9128 },
   'hyderabad': { lat: 17.3616, lng: 78.4747 },
@@ -1126,10 +1160,13 @@ export async function askGeminiTouristRecommendations(
 
 export interface GeminiRecommendedDestination {
   name: string;
+  city?: string;
   stateOrCountry: string;
   shortDescription: string;
   bestTimeToVisit: string;
   highlights: string[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface GeminiHospitalityHotel {
@@ -1138,6 +1175,9 @@ export interface GeminiHospitalityHotel {
   priceRange: string;
   features: string[];
   locationArea: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface GeminiHospitalityRestaurant {
@@ -1145,6 +1185,9 @@ export interface GeminiHospitalityRestaurant {
   cuisineType: string;
   mustTryDishes: string[];
   atmosphere: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface GeminiHospitalityResult {
@@ -1438,30 +1481,62 @@ export function convertGeminiDestinationToSpot(
   fallbackIndex: number = 0
 ): TouristSpot {
   const cleanName = dest.name.split(',')[0].trim();
-  const searchStr = `${dest.name} ${dest.stateOrCountry}`.toLowerCase();
+  const searchStr = `${dest.name} ${dest.city || ''} ${dest.stateOrCountry}`.toLowerCase();
   
   // Find matching city from coordinates database or string
-  let detectedCity = '';
-  let coords = { lat: 21.1702 + fallbackIndex * 0.008, lng: 72.8311 + fallbackIndex * 0.008 }; // Default Surat center
-  
+  let detectedCity = dest.city?.trim() || '';
+  let coords: { lat: number; lng: number } | null = null;
+
+  // 1. Direct coordinates from Gemini API
+  if (typeof dest.latitude === 'number' && typeof dest.longitude === 'number' && (dest.latitude !== 0 || dest.longitude !== 0)) {
+    coords = { lat: dest.latitude, lng: dest.longitude };
+  }
+
+  // 2. Look up matching city in CITY_COORDINATES
   for (const [cKey, cCoords] of Object.entries(CITY_COORDINATES)) {
     if (searchStr.includes(cKey)) {
-      detectedCity = cKey.charAt(0).toUpperCase() + cKey.slice(1);
-      coords = {
-        lat: cCoords.lat + (fallbackIndex * 0.005 - 0.002),
-        lng: cCoords.lng + (fallbackIndex * 0.005 - 0.002)
-      };
+      if (!detectedCity) {
+        detectedCity = cKey.charAt(0).toUpperCase() + cKey.slice(1);
+      }
+      if (!coords) {
+        coords = {
+          lat: cCoords.lat + (fallbackIndex * 0.005 - 0.002),
+          lng: cCoords.lng + (fallbackIndex * 0.005 - 0.002)
+        };
+      }
       break;
     }
   }
 
   if (!detectedCity) {
-    detectedCity = dest.stateOrCountry.split(',')[0].trim() || cleanName;
+    const parts = dest.stateOrCountry.split(',').map(s => s.trim()).filter(Boolean);
+    detectedCity = parts[0] || cleanName;
   }
 
-  // Authentic photo matching
+  // 3. Coordinate fallback: NEVER default to Surat for non-Surat destinations!
+  if (!coords) {
+    if (searchStr.includes('surat')) {
+      coords = { lat: 21.1702 + fallbackIndex * 0.008, lng: 72.8311 + fallbackIndex * 0.008 };
+    } else {
+      coords = { lat: 51.5074 + fallbackIndex * 0.005, lng: -0.1278 + fallbackIndex * 0.005 };
+    }
+  }
+
+  // Authentic photo matching with global destination support
   let img = 'https://images.unsplash.com/photo-1571536802807-30451e3955d8?auto=format&fit=crop&w=1400&q=85';
-  if (searchStr.includes('surat')) {
+  if (searchStr.includes('london') || searchStr.includes('westminster') || searchStr.includes('big ben') || searchStr.includes('thames') || searchStr.includes('buckingham')) {
+    img = 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1400&q=85';
+  } else if (searchStr.includes('paris') || searchStr.includes('eiffel') || searchStr.includes('louvre')) {
+    img = 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1400&q=85';
+  } else if (searchStr.includes('tokyo') || searchStr.includes('shinjuku') || searchStr.includes('shibuya')) {
+    img = 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1400&q=85';
+  } else if (searchStr.includes('new york') || searchStr.includes('manhattan') || searchStr.includes('times square')) {
+    img = 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1400&q=85';
+  } else if (searchStr.includes('dubai') || searchStr.includes('burj')) {
+    img = 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1400&q=85';
+  } else if (searchStr.includes('rome') || searchStr.includes('colosseum')) {
+    img = 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1400&q=85';
+  } else if (searchStr.includes('surat')) {
     if (searchStr.includes('castle') || searchStr.includes('fort')) {
       img = 'https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1400&q=85';
     } else if (searchStr.includes('beach') || searchStr.includes('dumas')) {
@@ -1635,15 +1710,25 @@ export function convertHospitalityHotelsToHotels(
         : 'Urban Comfort';
 
     const hotelImg = getAuthenticHotelImage(gh.name, gh.category);
+    const hotelCity = gh.city?.trim() || spot.city;
+
+    const hotelLat = (typeof gh.latitude === 'number' && gh.latitude !== 0)
+      ? gh.latitude
+      : spot.location.lat + (idx * 0.003 - 0.004);
+    const hotelLng = (typeof gh.longitude === 'number' && gh.longitude !== 0)
+      ? gh.longitude
+      : spot.location.lng + (idx * 0.003 - 0.004);
+
+    const distKm = calculateHaversineDistance(spot.location, { lat: hotelLat, lng: hotelLng });
 
     return {
       id: `hotel-gemini-${idx}-${gh.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
       name: gh.name,
-      city: spot.city,
-      address: `${gh.locationArea}, ${spot.city}`,
+      city: hotelCity,
+      address: gh.locationArea ? `${gh.locationArea}, ${hotelCity}` : `${hotelCity}`,
       location: {
-        lat: spot.location.lat + (idx * 0.003 - 0.004),
-        lng: spot.location.lng + (idx * 0.003 - 0.004)
+        lat: hotelLat,
+        lng: hotelLng
       },
       tier,
       pricePerNight: price,
@@ -1657,7 +1742,7 @@ export function convertHospitalityHotelsToHotels(
           name: `${gh.category} Deluxe Room`,
           pricePerNight: price,
           capacity: 2,
-          description: `Spacious suite in ${gh.locationArea} with ${gh.features[0] || 'city outlook'}.`,
+          description: `Spacious room in ${gh.locationArea || hotelCity} with ${gh.features[0] || 'city view'}.`,
           perks: ['Breakfast Included', 'Free Wi-Fi', 'Complimentary Bottled Water']
         },
         {
@@ -1665,21 +1750,21 @@ export function convertHospitalityHotelsToHotels(
           name: `Premier Landmark Suite`,
           pricePerNight: Math.round(price * 1.35),
           capacity: 3,
-          description: `Upgraded premier room with panoramic views and priority check-in.`,
+          description: `Upgraded premier suite with panoramic views of ${hotelCity} and priority check-in.`,
           perks: ['All Deluxe Perks', 'Welcome Drink', 'Late Checkout Priority']
         }
       ],
       amenities: gh.features,
-      checkinCount: 4200 - idx * 600,
-      weeklyCheckins: 380 - idx * 45,
+      checkinCount: 22000 - idx * 1200,
+      weeklyCheckins: 1450 - idx * 120,
       googlePlaceId: `ChIJ_h_${gh.name.replace(/[^a-zA-Z0-9]/g, '_')}`,
-      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${gh.name} ${spot.city}`)}`,
+      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${gh.name} ${hotelCity}`)}`,
       footfallRank: idx + 1,
       image: hotelImg,
       businessRegNumber: `GST36GEMINI${idx}992`,
       partnershipModel: 'hybrid',
       guideReferralKickbackPercent: 0.06,
-      distanceKm: 0.8 + idx * 0.6
+      distanceKm: distKm > 0 ? distKm : 0.8 + idx * 0.6
     };
   });
 }
@@ -1696,23 +1781,33 @@ export function convertHospitalityRestaurantsToRestaurants(
       name: dish,
       price: 280 + dIdx * 90,
       description: `Signature culinary preparation at ${gr.name}`,
-      isVeg: !dish.toLowerCase().includes('mutton') && !dish.toLowerCase().includes('fish') && !dish.toLowerCase().includes('chicken') && !dish.toLowerCase().includes('prawn') && !dish.toLowerCase().includes('kebab')
+      isVeg: !dish.toLowerCase().includes('mutton') && !dish.toLowerCase().includes('fish') && !dish.toLowerCase().includes('chicken') && !dish.toLowerCase().includes('prawn') && !dish.toLowerCase().includes('kebab') && !dish.toLowerCase().includes('beef') && !dish.toLowerCase().includes('pork')
     }));
 
     const restImg = getAuthenticRestaurantImage(gr.name, gr.cuisineType, gr.mustTryDishes);
+    const restCity = gr.city?.trim() || spot.city;
+
+    const restLat = (typeof gr.latitude === 'number' && gr.latitude !== 0)
+      ? gr.latitude
+      : spot.location.lat + (idx * 0.002 - 0.003);
+    const restLng = (typeof gr.longitude === 'number' && gr.longitude !== 0)
+      ? gr.longitude
+      : spot.location.lng + (idx * 0.002 - 0.003);
+
+    const distKm = calculateHaversineDistance(spot.location, { lat: restLat, lng: restLng });
 
     return {
       id: `rest-gemini-${idx}-${gr.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
       name: gr.name,
-      city: spot.city,
-      address: `${gr.atmosphere.slice(0, 40)}..., ${spot.city}`,
+      city: restCity,
+      address: gr.atmosphere ? `${gr.atmosphere.slice(0, 45)}, ${restCity}` : `${restCity}`,
       location: {
-        lat: spot.location.lat + (idx * 0.002 - 0.003),
-        lng: spot.location.lng + (idx * 0.002 - 0.003)
+        lat: restLat,
+        lng: restLng
       },
       cuisine: [gr.cuisineType],
-      checkinCount: 2800 - idx * 400,
-      weeklyCheckins: 290 - idx * 30,
+      checkinCount: 16000 - idx * 800,
+      weeklyCheckins: 1100 - idx * 70,
       footfallRank: idx + 1,
       priceForTwo: 900,
       status: 'verified',
@@ -1720,8 +1815,8 @@ export function convertHospitalityRestaurantsToRestaurants(
       diningVoucherDiscountPercent: 15,
       diningVoucherPrice: 425,
       image: restImg,
-      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${gr.name} ${spot.city}`)}`,
-      distanceKm: 0.5 + idx * 0.4,
+      googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${gr.name} ${restCity}`)}`,
+      distanceKm: distKm > 0 ? distKm : 0.5 + idx * 0.4,
       openingHours: '11:30 AM - 11:00 PM',
       seatingCapacity: 65,
       tags: [gr.cuisineType, 'Gemini Curated', 'Verified Diner Footfalls']

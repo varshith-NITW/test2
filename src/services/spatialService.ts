@@ -61,7 +61,31 @@ export function filterHotelsByRadius(
   hotels: Hotel[],
   radiusKm: number = 8.0
 ): Array<{ hotel: Hotel; distanceKm: number; commute: ReturnType<typeof estimateCommuteTime> }> {
+  const spotCity = (spot.city || '').toLowerCase().trim();
+
   return hotels
+    .filter((hotel) => {
+      const hotelCity = (hotel.city || '').toLowerCase().trim();
+      const hotelAddr = (hotel.address || '').toLowerCase();
+      
+      // Strict Cross-City Rejection: Never show properties from completely unrelated cities
+      if (spotCity && hotelCity && spotCity !== hotelCity) {
+        const isMatch = spotCity.includes(hotelCity) || hotelCity.includes(spotCity);
+        if (!isMatch) {
+          const knownCities = [
+            'surat', 'lucknow', 'hyderabad', 'delhi', 'goa', 'jaipur', 
+            'mumbai', 'bengaluru', 'kolkata', 'chennai', 'kochi', 'agra', 
+            'varanasi', 'london', 'paris', 'tokyo', 'new york', 'dubai', 'rome'
+          ];
+          for (const kc of knownCities) {
+            if ((hotelCity.includes(kc) || hotelAddr.includes(kc)) && !spotCity.includes(kc)) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    })
     .map((hotel) => {
       const distanceKm = calculateHaversineDistance(spot.location, hotel.location);
       return {
@@ -82,7 +106,30 @@ export function filterRestaurantsByRadius(
   restaurants: Restaurant[],
   radiusKm: number = 8.0
 ): Array<{ restaurant: Restaurant; distanceKm: number; commute: ReturnType<typeof estimateCommuteTime> }> {
+  const spotCity = (spot.city || '').toLowerCase().trim();
+
   return restaurants
+    .filter((rest) => {
+      const restCity = (rest.city || '').toLowerCase().trim();
+      const restAddr = (rest.address || '').toLowerCase();
+      
+      if (spotCity && restCity && spotCity !== restCity) {
+        const isMatch = spotCity.includes(restCity) || restCity.includes(spotCity);
+        if (!isMatch) {
+          const knownCities = [
+            'surat', 'lucknow', 'hyderabad', 'delhi', 'goa', 'jaipur', 
+            'mumbai', 'bengaluru', 'kolkata', 'chennai', 'kochi', 'agra', 
+            'varanasi', 'london', 'paris', 'tokyo', 'new york', 'dubai', 'rome'
+          ];
+          for (const kc of knownCities) {
+            if ((restCity.includes(kc) || restAddr.includes(kc)) && !spotCity.includes(kc)) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    })
     .map((rest) => {
       const distanceKm = calculateHaversineDistance(spot.location, rest.location);
       return {
@@ -104,20 +151,34 @@ export function filterGuidesByProximity(
   nearbyHotels: Hotel[]
 ): Array<{ guide: Guide; distanceKm: number; affiliatedWithNearbyHotel: boolean }> {
   const nearbyHotelIds = new Set(nearbyHotels.map(h => h.id));
-  const spotCity = (spot.city || '').toLowerCase();
+  const spotCity = (spot.city || '').toLowerCase().trim();
 
   // Prioritize certified guides belonging to the selected spot's city or affiliated hotels
   const cityMatchingGuides = guides.filter(g => {
-    const bioMatch = g.bio.toLowerCase().includes(spotCity);
-    const verifMatch = g.verificationId.toLowerCase().includes(spotCity.slice(0, 3));
-    const nameMatch = g.name.toLowerCase().includes(spotCity);
-    const hotelMatch = g.affiliatedHotelId ? nearbyHotelIds.has(g.affiliatedHotelId) : false;
-    return bioMatch || verifMatch || nameMatch || hotelMatch;
+    const bio = g.bio.toLowerCase();
+    const verif = g.verificationId.toLowerCase();
+    const name = g.name.toLowerCase();
+    const isAffiliated = g.affiliatedHotelId ? nearbyHotelIds.has(g.affiliatedHotelId) : false;
+    
+    if (isAffiliated) return true;
+    if (spotCity) {
+      if (bio.includes(spotCity) || verif.includes(spotCity.slice(0, 3)) || name.includes(spotCity)) {
+        return true;
+      }
+    }
+    return false;
   });
 
-  const candidates = cityMatchingGuides.length > 0 ? cityMatchingGuides : guides;
+  // Only fallback if no matching guides AND guide doesn't mention conflicting cities
+  const candidates = cityMatchingGuides.length > 0 
+    ? cityMatchingGuides 
+    : guides.filter(g => {
+        const bio = g.bio.toLowerCase();
+        const otherCities = ['surat', 'hyderabad', 'lucknow', 'delhi', 'jaipur', 'agra'];
+        return !otherCities.some(oc => bio.includes(oc) && !spotCity.includes(oc));
+      });
   
-  return candidates.map((guide, idx) => {
+  return (candidates.length > 0 ? candidates : guides).map((guide, idx) => {
     const isAffiliated = guide.affiliatedHotelId ? nearbyHotelIds.has(guide.affiliatedHotelId) : false;
     const baseDist = isAffiliated ? 0.6 : (idx * 0.9 + 0.4);
     const distanceKm = Math.round(baseDist * 10) / 10;

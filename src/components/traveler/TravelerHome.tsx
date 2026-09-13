@@ -88,15 +88,27 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
       onAddSpot(spot);
     }
 
-    // Check if we have hotels in this city or in 15km proximity
-    const cityHotels = hotels.filter(h => 
-      h.city.toLowerCase() === spot!.city.toLowerCase() ||
-      calculateHaversineDistance(spot!.location, h.location) <= 15
-    );
+    // Check if we have hotels in this city or in 15km proximity without cross-city contamination
+    const spotCity = spot.city.toLowerCase().trim();
+    const cityHotels = hotels.filter(h => {
+      const hCity = h.city.toLowerCase().trim();
+      const hAddr = h.address.toLowerCase();
+      if (spotCity && (hCity === spotCity || hCity.includes(spotCity) || spotCity.includes(hCity) || hAddr.includes(spotCity))) {
+        return true;
+      }
+      const dist = calculateHaversineDistance(spot!.location, h.location);
+      if (dist <= 15) {
+        const otherKnown = ['surat', 'lucknow', 'hyderabad', 'delhi', 'goa', 'jaipur', 'agra'];
+        return !otherKnown.some(oc => (hCity.includes(oc) || hAddr.includes(oc)) && !spotCity.includes(oc));
+      }
+      return false;
+    });
 
     if (cityHotels.length > 0) {
-      setSelectedHotel(cityHotels[0]);
-      setSelectedRoom(cityHotels[0].roomTypes[0]);
+      const nonSynthetic = cityHotels.filter(h => !h.id.startsWith('hotel-dyn-'));
+      const topHotel = nonSynthetic[0] || cityHotels[0];
+      setSelectedHotel(topHotel);
+      setSelectedRoom(topHotel.roomTypes[0]);
     } else {
       // Dynamically generate proximity inventory for this spot
       const dynamicInv = generateProximityInventoryForSpot(spot);

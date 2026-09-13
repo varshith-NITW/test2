@@ -16,10 +16,13 @@ function getAiClient(customKey?: string): GoogleGenAI | null {
 
 export interface RecommendedDestination {
   name: string;
+  city?: string;
   stateOrCountry: string;
   shortDescription: string;
   bestTimeToVisit: string;
   highlights: string[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface RecommendedHotel {
@@ -28,6 +31,9 @@ export interface RecommendedHotel {
   priceRange: string;
   features: string[];
   locationArea: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface RecommendedRestaurant {
@@ -35,6 +41,9 @@ export interface RecommendedRestaurant {
   cuisineType: string;
   mustTryDishes: string[];
   atmosphere: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface HospitalityRecommendation {
@@ -355,6 +364,41 @@ const REGIONAL_KNOWLEDGE: Record<string, {
   }
 };
 
+// Global Cities and Coordinates
+const GLOBAL_CITY_COUNTRIES: Record<string, { country: string; lat: number; lng: number }> = {
+  'london': { country: 'United Kingdom', lat: 51.5074, lng: -0.1278 },
+  'paris': { country: 'France', lat: 48.8566, lng: 2.3522 },
+  'tokyo': { country: 'Japan', lat: 35.6762, lng: 139.6503 },
+  'new york': { country: 'United States', lat: 40.7128, lng: -74.0060 },
+  'dubai': { country: 'United Arab Emirates', lat: 25.2048, lng: 55.2708 },
+  'singapore': { country: 'Singapore', lat: 1.3521, lng: 103.8198 },
+  'rome': { country: 'Italy', lat: 41.9028, lng: 12.4964 },
+  'barcelona': { country: 'Spain', lat: 41.3879, lng: 2.1699 },
+  'amsterdam': { country: 'Netherlands', lat: 52.3676, lng: 4.9041 },
+  'berlin': { country: 'Germany', lat: 52.5200, lng: 13.4050 },
+  'sydney': { country: 'Australia', lat: -33.8688, lng: 151.2093 },
+  'bali': { country: 'Indonesia', lat: -8.4095, lng: 115.1889 },
+  'bangkok': { country: 'Thailand', lat: 13.7563, lng: 100.5018 },
+  'cairo': { country: 'Egypt', lat: 30.0444, lng: 31.2357 },
+  'istanbul': { country: 'Turkey', lat: 41.0082, lng: 28.9784 },
+  'venice': { country: 'Italy', lat: 45.4408, lng: 12.3155 },
+  'toronto': { country: 'Canada', lat: 43.6532, lng: -79.3832 },
+  'vancouver': { country: 'Canada', lat: 49.2827, lng: -123.1207 },
+  'san francisco': { country: 'United States', lat: 37.7749, lng: -122.4194 },
+  'los angeles': { country: 'United States', lat: 34.0522, lng: -118.2437 },
+  'seoul': { country: 'South Korea', lat: 37.5665, lng: 126.9780 },
+  'hong kong': { country: 'Hong Kong', lat: 22.3193, lng: 114.1694 },
+  'zurich': { country: 'Switzerland', lat: 47.3769, lng: 8.5417 },
+  'vienna': { country: 'Austria', lat: 48.2082, lng: 16.3738 },
+  'prague': { country: 'Czech Republic', lat: 50.0755, lng: 14.4378 },
+  'madrid': { country: 'Spain', lat: 40.4168, lng: -3.7038 },
+  'athens': { country: 'Greece', lat: 37.9838, lng: 23.7275 },
+  'florence': { country: 'Italy', lat: 43.7696, lng: 11.2558 },
+  'milan': { country: 'Italy', lat: 45.4642, lng: 9.1900 },
+  'edinburgh': { country: 'United Kingdom', lat: 55.9533, lng: -3.1883 },
+  'dublin': { country: 'Ireland', lat: 53.3498, lng: -6.2603 }
+};
+
 /**
  * 1. Recommend tourist places based on user preferences
  */
@@ -371,12 +415,17 @@ export async function getPlacesRecommendations(body: {
   const companions = body.companions || 'solo';
   const clientKey = body.apiKey;
 
-  const prompt = `Act as an expert travel advisor. Recommend top tourist destinations based on these preferences:
+  const prompt = `Act as an expert real-world travel advisor. Recommend top authentic tourist destinations and attractions based on these preferences:
     - User Preferences: ${preferences || 'Authentic culture, verified check-in hotspots, scenic sights'}
     - Budget: ${budget}
     - Duration: ${days} days
     - Traveling with: ${companions}
-    CRITICAL INSTRUCTION: Recommend ONLY destinations and attractions directly located in or closely related to the place requested by the user. Do NOT include unrelated cities.`;
+
+    CRITICAL REAL-WORLD INSTRUCTIONS:
+    1. Recommend ONLY authentic, actually existing tourist destinations located in or around the user's requested destination/city.
+    2. Provide accurate geographical latitude and longitude coordinates for each attraction.
+    3. Specify the exact city name (e.g. London, Paris, Tokyo, Surat, New York) in the city property.
+    4. Do NOT include destinations from unrelated cities or countries.`;
 
   const ai = getAiClient(clientKey);
 
@@ -399,9 +448,12 @@ export async function getPlacesRecommendations(body: {
                     type: Type.OBJECT,
                     properties: {
                       name: { type: Type.STRING },
+                      city: { type: Type.STRING },
                       stateOrCountry: { type: Type.STRING },
                       shortDescription: { type: Type.STRING },
                       bestTimeToVisit: { type: Type.STRING },
+                      latitude: { type: Type.NUMBER },
+                      longitude: { type: Type.NUMBER },
                       highlights: {
                         type: Type.ARRAY,
                         items: { type: Type.STRING }
@@ -456,30 +508,43 @@ export async function getPlacesRecommendations(body: {
     .split(/\s+/)
     .filter(Boolean);
 
-  const targetCity = rawTokens[0] ? (rawTokens[0].charAt(0).toUpperCase() + rawTokens[0].slice(1).toLowerCase()) : 'Jaipur';
+  const targetCity = rawTokens[0] ? (rawTokens[0].charAt(0).toUpperCase() + rawTokens[0].slice(1).toLowerCase()) : 'London';
+  const lowerTarget = targetCity.toLowerCase();
+  const globalMatch = GLOBAL_CITY_COUNTRIES[lowerTarget];
+  const detectedCountry = globalMatch ? globalMatch.country : 'Global Destination';
+  const baseCoords = globalMatch ? { lat: globalMatch.lat, lng: globalMatch.lng } : { lat: 20.0, lng: 77.0 };
 
   // NEVER append unrelated cities! Only generate attractions for the requested city:
   const dynamicCityDestinations: RecommendedDestination[] = [
     {
-      name: `${targetCity} Historic Fortress & Citadel`,
-      stateOrCountry: 'India',
-      shortDescription: `The ancient defensive citadel and royal heritage complex of ${targetCity}, evaluated with high visitor check-in footfalls.`,
-      bestTimeToVisit: '08:30 AM before peak mid-day visitor congestion',
-      highlights: [`${targetCity} Fort Ramparts`, 'Royal Darbar Hall', 'Acoustic Arches', 'Panoramic City Viewpoint']
+      name: `${targetCity} Historic Old Town & Heritage Citadel`,
+      city: targetCity,
+      stateOrCountry: detectedCountry,
+      shortDescription: `The iconic cultural quarter and historical landmark district of ${targetCity}, evaluated with verified check-in footfalls.`,
+      bestTimeToVisit: '09:00 AM before peak mid-day visitor traffic',
+      highlights: [`${targetCity} Historic Promenade`, 'Panoramic City Viewpoint', 'Old Town Heritage Gate', 'Cultural Artisan Square'],
+      latitude: baseCoords.lat + 0.005,
+      longitude: baseCoords.lng + 0.005
     },
     {
-      name: `${targetCity} Heritage Bazaar & Old Town Promenade`,
-      stateOrCountry: 'India',
-      shortDescription: `Centuries-old artisan trading bazaars of ${targetCity} famous for regional handicrafts, generational spice merchants, and street food.`,
-      bestTimeToVisit: '05:30 PM for illuminated bazaar stroll and evening delicacies',
-      highlights: ['Artisan Guild Workshops', 'Traditional Street Food Stalls', 'Historic Havelis', 'Evening Spice Trail']
+      name: `${targetCity} Central Cultural Promenade & Plaza`,
+      city: targetCity,
+      stateOrCountry: detectedCountry,
+      shortDescription: `Vibrant pedestrian promenade lined with regional architecture, local cafes, artisan workshops, and cultural markets in ${targetCity}.`,
+      bestTimeToVisit: '05:30 PM for illuminated evening stroll and local cuisine',
+      highlights: ['Artisan Guild Workshops', 'Historic Architecture', 'Pedestrian Plaza', 'Evening Culinary Trail'],
+      latitude: baseCoords.lat - 0.004,
+      longitude: baseCoords.lng + 0.006
     },
     {
-      name: `${targetCity} Waterfront & Sunset Promenade`,
-      stateOrCountry: 'India',
-      shortDescription: `Scenic waterfront corridor and recreation gardens offering refreshing breezes and peaceful twilight vistas over ${targetCity}.`,
-      bestTimeToVisit: '05:45 PM for sunset reflection and boating',
-      highlights: ['Lakeside Promenade', 'Sunset Boating Pier', 'Botanical Gardens', 'Evening Illumination']
+      name: `${targetCity} Waterfront & Twilight Gardens`,
+      city: targetCity,
+      stateOrCountry: detectedCountry,
+      shortDescription: `Scenic waterfront corridor and recreational parklands offering refreshing breezes and twilight vistas across ${targetCity}.`,
+      bestTimeToVisit: '06:00 PM for sunset reflection and boat excursions',
+      highlights: ['Waterfront Promenade', 'Sunset Scenic Pier', 'Botanical Gardens', 'Evening Illumination'],
+      latitude: baseCoords.lat + 0.008,
+      longitude: baseCoords.lng - 0.005
     }
   ];
 
@@ -523,7 +588,19 @@ const CITY_NAME_ALIASES: Record<string, string> = {
   'golconda': 'hyderabad',
   'ghat': 'varanasi',
   'kashi': 'varanasi',
-  'taj mahal': 'agra'
+  'taj mahal': 'agra',
+  'westminster': 'london',
+  'big ben': 'london',
+  'buckingham': 'london',
+  'eiffel': 'paris',
+  'louvre': 'paris',
+  'shinjuku': 'tokyo',
+  'shibuya': 'tokyo',
+  'manhattan': 'new york',
+  'times square': 'new york',
+  'colosseum': 'rome',
+  'sagrada': 'barcelona',
+  'burj': 'dubai'
 };
 
 /**
@@ -557,6 +634,14 @@ export async function getHospitalityRecommendations(body: {
       }
     }
   }
+  if (!resolvedCity) {
+    for (const city of Object.keys(GLOBAL_CITY_COUNTRIES)) {
+      if (lower.includes(city)) {
+        resolvedCity = city;
+        break;
+      }
+    }
+  }
 
   const targetLocation = resolvedCity 
     ? `${destinationName}, ${resolvedCity.charAt(0).toUpperCase() + resolvedCity.slice(1)}` 
@@ -568,10 +653,11 @@ Recommend top REAL hotels and popular local dining establishments in ${targetLoc
 - Cuisine & Style: ${foodPreferences}
 
 CRITICAL ACCURACY & REALITY RULES:
-1. ONLY return REAL, ACTUALLY EXISTING hotels that can be booked in ${targetLocation}. Use their official real names (e.g., Surat Marriott Hotel, Lords Plaza Surat, The Grand Bhagwati, Courtyard by Marriott, Taj, Hyatt, Lemon Tree, Radisson, Best Western, or established real local boutique properties).
+1. ONLY return REAL, ACTUALLY EXISTING hotels that can be booked in ${targetLocation}. Use their official real names (e.g., Premier Inn London County Hall, The Ritz London, Surat Marriott Hotel, etc.).
 2. NEVER invent generic, fictional, placeholder, or template names (e.g. NEVER output '${destinationName} Grand Heritage Palace', '${destinationName} Boutique Suites', or any made-up name).
-3. Return ONLY real, famous, well-known restaurants, street food hubs, or sweet shops that actually exist in ${targetLocation} (e.g. Sasumaa Gujarati Thali, Jaani Locho House, Kansar Gujarati Thali, Dumas Beach Lashkari Bhajiya, A-One Cold Coco).
-4. Provide the exact real neighborhood/locality in ${targetLocation} (e.g. Athwalines, Ring Road, Dumas Road, Nanpura), realistic price range in INR (e.g. ₹2,500 - ₹9,000 / night), and authentic real amenities.`;
+3. Return ONLY real, famous, well-known restaurants, street food hubs, or cafes that actually exist in ${targetLocation}.
+4. Provide the exact real neighborhood/locality in ${targetLocation}, realistic price range, and accurate real geographic latitude and longitude coordinates for each hotel and restaurant in ${targetLocation}.
+5. Set the city property to the exact city name of ${targetLocation}.`;
 
   const ai = getAiClient(clientKey);
 
@@ -594,10 +680,13 @@ CRITICAL ACCURACY & REALITY RULES:
                     type: Type.OBJECT,
                     properties: {
                       name: { type: Type.STRING },
+                      city: { type: Type.STRING },
                       category: { type: Type.STRING },
                       priceRange: { type: Type.STRING },
                       features: { type: Type.ARRAY, items: { type: Type.STRING } },
-                      locationArea: { type: Type.STRING }
+                      locationArea: { type: Type.STRING },
+                      latitude: { type: Type.NUMBER },
+                      longitude: { type: Type.NUMBER }
                     },
                     required: ['name', 'category', 'priceRange']
                   }
@@ -608,9 +697,12 @@ CRITICAL ACCURACY & REALITY RULES:
                     type: Type.OBJECT,
                     properties: {
                       name: { type: Type.STRING },
+                      city: { type: Type.STRING },
                       cuisineType: { type: Type.STRING },
                       mustTryDishes: { type: Type.ARRAY, items: { type: Type.STRING } },
-                      atmosphere: { type: Type.STRING }
+                      atmosphere: { type: Type.STRING },
+                      latitude: { type: Type.NUMBER },
+                      longitude: { type: Type.NUMBER }
                     },
                     required: ['name', 'cuisineType', 'mustTryDishes']
                   }
