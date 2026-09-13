@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Compass, Hotel, Users, ShieldCheck, Sparkles, MapPin, Zap, User, LogOut, ChevronDown, Phone, Mail, Cloud } from 'lucide-react';
+import { Compass, Hotel, Users, ShieldCheck, Sparkles, MapPin, Zap, User, LogOut, ChevronDown, Phone, Mail, Cloud, Lock } from 'lucide-react';
 import { UserProfile } from '../types';
 
 export type PersonaType = 'traveler' | 'hotel' | 'guide';
@@ -12,6 +12,8 @@ interface NavbarProps {
   currentUser?: UserProfile | null;
   onOpenAuth?: (tab?: 'login' | 'signup') => void;
   onSignOut?: () => void;
+  authenticatedHotel?: import('../types').Hotel | null;
+  onHotelSignOut?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -21,7 +23,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onScrollToComparison,
   currentUser,
   onOpenAuth,
-  onSignOut
+  onSignOut,
+  authenticatedHotel,
+  onHotelSignOut
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState<boolean>(false);
 
@@ -214,6 +218,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <User className="w-3.5 h-3.5" />
                     <span>Sign In</span>
                   </button>
+                )}
+              </div>
+            )}
+
+            {/* Hotel Authentication Status Chip in Navbar (When on Hotel Portal) */}
+            {currentPersona === 'hotel' && (
+              <div className="relative">
+                {authenticatedHotel ? (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                      🏨
+                    </div>
+                    <div className="hidden sm:block leading-tight">
+                      <div className="text-xs font-bold text-slate-900 truncate max-w-[120px]">
+                        {authenticatedHotel.name}
+                      </div>
+                      <div className="text-[10px] text-emerald-700 font-semibold truncate max-w-[120px]">
+                        {authenticatedHotel.joinedDirectProgram ? '✓ Direct Partner' : 'Standard Host'}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">
+                    <Lock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Portal Locked</span>
+                  </span>
                 )}
               </div>
             )}

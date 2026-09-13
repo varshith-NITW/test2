@@ -24,6 +24,40 @@ export function App() {
     tab: 'login'
   });
 
+  // Hotel Partner Portal Authentication State (locks Hotel Portal until signed in)
+  const [authenticatedHotel, setAuthenticatedHotel] = useState<Hotel | null>(() => {
+    try {
+      const saved = localStorage.getItem('travelai_auth_hotel');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleHotelLogin = (hotel: Hotel) => {
+    setAuthenticatedHotel(hotel);
+    try {
+      localStorage.setItem('travelai_auth_hotel', JSON.stringify(hotel));
+    } catch (e) {
+      console.error(e);
+    }
+    setHotels((prev) => {
+      if (prev.some((h) => h.id === hotel.id)) {
+        return prev.map((h) => (h.id === hotel.id ? hotel : h));
+      }
+      return [hotel, ...prev];
+    });
+  };
+
+  const handleHotelLogout = () => {
+    setAuthenticatedHotel(null);
+    try {
+      localStorage.removeItem('travelai_auth_hotel');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Load Google Maps API script on application mount
   useEffect(() => {
     loadGoogleMapsScript().catch((e) => {
@@ -201,6 +235,8 @@ export function App() {
           logOut();
           setCurrentUser(null);
         }}
+        authenticatedHotel={authenticatedHotel}
+        onHotelSignOut={handleHotelLogout}
       />
 
       {/* Main Persona View Container */}
@@ -227,6 +263,9 @@ export function App() {
             guides={guides}
             bookings={bookings}
             onRegisterNewHotel={handleRegisterNewHotel}
+            authenticatedHotel={authenticatedHotel}
+            onHotelLogin={handleHotelLogin}
+            onHotelLogout={handleHotelLogout}
           />
         )}
 

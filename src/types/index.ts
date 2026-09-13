@@ -60,6 +60,14 @@ export interface Hotel {
   partnershipModel: 'in_house_guides' | 'community_pool' | 'hybrid';
   guideReferralKickbackPercent: number; // typically 5% to 8%
   distanceKm?: number;
+  // Hotel Partner Portal Authentication & Direct Program Fields
+  managerName?: string;
+  managerEmail?: string;
+  managerPhone?: string;
+  password?: string;
+  joinedDirectProgram?: boolean;
+  programDiscountPercent?: number;
+  allowsGuideBundling?: boolean;
 }
 
 export interface DishItem {

@@ -1,22 +1,46 @@
 import React, { useState } from 'react';
 import { Hotel, Guide, Booking, RoomType } from '../../types';
-import { ShieldCheck, Plus, DollarSign, Users, CheckCircle2, Building, Sparkles, MapPin, TrendingUp, AlertCircle, Phone, Mail, User, Lock } from 'lucide-react';
+import { ShieldCheck, Plus, DollarSign, Users, CheckCircle2, Building, Sparkles, MapPin, TrendingUp, AlertCircle, Phone, Mail, User, Lock, LogOut } from 'lucide-react';
+import { HotelAuthGate } from './HotelAuthGate';
 
 interface HotelPartnerPortalProps {
   hotels: Hotel[];
   guides: Guide[];
   bookings: Booking[];
   onRegisterNewHotel: (newHotel: Hotel) => void;
+  authenticatedHotel?: Hotel | null;
+  onHotelLogin?: (hotel: Hotel) => void;
+  onHotelLogout?: () => void;
 }
 
 export const HotelPartnerPortal: React.FC<HotelPartnerPortalProps> = ({
   hotels,
   guides,
   bookings,
-  onRegisterNewHotel
+  onRegisterNewHotel,
+  authenticatedHotel,
+  onHotelLogin,
+  onHotelLogout
 }) => {
+  // If portal is locked behind authentication, display the HotelAuthGate
+  if (!authenticatedHotel) {
+    return (
+      <div className="pb-16">
+        <HotelAuthGate
+          existingHotels={hotels}
+          onAuthSuccess={(hotel) => {
+            onRegisterNewHotel(hotel);
+            if (onHotelLogin) {
+              onHotelLogin(hotel);
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'onboarding'>('dashboard');
-  const [selectedHotelId, setSelectedHotelId] = useState<string>(hotels[0]?.id || '');
+  const [selectedHotelId, setSelectedHotelId] = useState<string>(authenticatedHotel.id || hotels[0]?.id || '');
 
   // Onboarding Form State
   const [step, setStep] = useState<number>(1);
@@ -31,7 +55,7 @@ export const HotelPartnerPortal: React.FC<HotelPartnerPortalProps> = ({
   const [referralRate, setReferralRate] = useState<number>(5);
   const [onboardSuccess, setOnboardSuccess] = useState<boolean>(false);
 
-  const activeHotel = hotels.find(h => h.id === selectedHotelId) || hotels[0];
+  const activeHotel = hotels.find(h => h.id === selectedHotelId) || authenticatedHotel || hotels[0];
 
   // Hotel Financial Metrics from confirmed bookings
   const hotelBookings = bookings.filter(b => b.hotelId === activeHotel.id);
@@ -99,42 +123,82 @@ export const HotelPartnerPortal: React.FC<HotelPartnerPortalProps> = ({
   return (
     <div className="space-y-6 pb-16">
       
-      {/* Header & Sub-nav */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900">Hotel Partner Portal</h1>
-            <span className="text-xs bg-indigo-50 text-indigo-700 font-bold px-2.5 py-0.5 rounded-full border border-indigo-200">
-              Verified Properties
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Manage inventory, configure local guide collaboration models, and monitor multi-party payout settlements.
-          </p>
-        </div>
+      {/* Header & Sub-nav with Authenticated Property Identity */}
+      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-mono text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-md">
+                {activeHotel.id}
+              </span>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+                {activeHotel.name}
+              </h1>
+              {activeHotel.joinedDirectProgram ? (
+                <span className="text-xs bg-emerald-50 text-emerald-800 font-extrabold px-3 py-1 rounded-full border border-emerald-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Direct Partner Program ({activeHotel.programDiscountPercent || 15}% Traveler Discount)</span>
+                </span>
+              ) : (
+                <span className="text-xs bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full border border-slate-200">
+                  Standard Host Listing
+                </span>
+              )}
+            </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'dashboard'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Partner Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab('onboarding')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'onboarding'
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-            }`}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Self-Onboard Property</span>
-          </button>
+            <div className="flex items-center gap-4 text-xs text-slate-600 flex-wrap">
+              <span className="flex items-center gap-1 text-slate-700 font-medium">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                {activeHotel.city} &bull; {activeHotel.address}
+              </span>
+              <span>&bull;</span>
+              <span className="flex items-center gap-1 text-slate-700 font-medium">
+                <User className="w-3.5 h-3.5 text-indigo-600" />
+                Manager: <strong className="text-slate-900">{activeHotel.managerName || 'General Manager'}</strong>
+              </span>
+              <span>&bull;</span>
+              <span className="flex items-center gap-1 text-slate-700 font-medium">
+                <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                Front Desk: <strong className="text-emerald-700">{activeHotel.managerPhone || '+91 98251 23456'}</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Action Tabs & Sign Out */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'dashboard'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              Partner Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('onboarding')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'onboarding'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+              }`}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Another Property</span>
+            </button>
+            
+            {onHotelLogout && (
+              <button
+                type="button"
+                onClick={onHotelLogout}
+                className="px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ml-auto sm:ml-0"
+              >
+                <LogOut className="w-3.5 h-3.5 text-red-600" />
+                <span>Sign Out Hotel</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
