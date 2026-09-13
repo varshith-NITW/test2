@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Compass, Hotel, Users, ShieldCheck, Sparkles, MapPin, Zap, User, LogOut, ChevronDown, Phone, Mail } from 'lucide-react';
+import { Compass, Hotel, Users, ShieldCheck, Sparkles, MapPin, Zap, User, LogOut, ChevronDown, Phone, Mail, Cloud } from 'lucide-react';
 import { UserProfile } from '../types';
 
 export type PersonaType = 'traveler' | 'hotel' | 'guide';
@@ -41,7 +41,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Travel<span className="text-emerald-600">AI</span>
                 </span>
                 <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  <ShieldCheck className="w-3 h-3" /> Verified Ecosystem
+                  <ShieldCheck className="w-3 h-3" /> Verified
+                </span>
+                <span className="hidden lg:inline-flex items-center gap-1 text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full">
+                  <Cloud className="w-3 h-3 text-sky-600" /> Cloud Storage
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-slate-500">
@@ -165,6 +168,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
 
                       <div className="pt-3 space-y-2">
+                        <div className="text-[10px] text-sky-700 bg-sky-50 px-2 py-1.5 rounded-lg border border-sky-200 flex items-center gap-1.5 font-semibold">
+                          <Cloud className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                          <span>Google Cloud Firestore Storage (Live Sync)</span>
+                        </div>
+
                         <div className="text-[10px] text-slate-400 flex items-center gap-1">
                           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                           <span>Contact details dispatched on booking. Password encrypted.</span>

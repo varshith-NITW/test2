@@ -1,9 +1,13 @@
 import { UserProfile, SignUpFormData, LoginFormData } from '../types';
 import { NODE_API_BASE } from './apiClient';
-
-const STORAGE_USER_KEY = 'travelai_auth_user';
-const STORAGE_TOKEN_KEY = 'travelai_auth_token';
-const STORAGE_ACCOUNTS_KEY = 'travelai_registered_accounts';
+import {
+  saveTravelerToCloud,
+  getTravelerFromCloud,
+  saveAccountVaultToCloud,
+  verifyAccountVaultInCloud,
+  setActiveCloudSession,
+  getActiveCloudSession
+} from './cloudStorageService';
 
 export const DEFAULT_USER: UserProfile = {
   id: 'user-varshith-1',
@@ -15,24 +19,25 @@ export const DEFAULT_USER: UserProfile = {
 };
 
 /**
- * Retrieve active traveler user profile from localStorage or initialize with default demo traveler
+ * Retrieve active traveler user profile from Cloud Firestore session cache or initialize with default demo traveler
  */
 export function getCurrentUser(): UserProfile | null {
   try {
-    const raw = localStorage.getItem(STORAGE_USER_KEY);
+    // Check cloud mirror in session memory
+    const raw = sessionStorage.getItem('travelai_active_cloud_user');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.email && parsed.username) {
         return parsed;
       }
     }
-    // Initialize with default demo traveler
-    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(DEFAULT_USER));
-    return DEFAULT_USER;
   } catch (err) {
-    console.warn('Failed to read auth user from localStorage:', err);
-    return DEFAULT_USER;
+    // Fall through
   }
+
+  // Pre-seed default demo traveler
+  sessionStorage.setItem('travelai_active_cloud_user', JSON.stringify(DEFAULT_USER));
+  return DEFAULT_USER;
 }
 
 /**
@@ -43,7 +48,8 @@ export function getCurrentUser(): UserProfile | null {
  * - phoneNumber
  * - location
  * 
- * Note: Password is NEVER saved in user profile or exposed to partners.
+ * Persists directly to Google Cloud Firestore (collection: cloud_travelers).
+ * Password is NEVER saved in user profile or exposed to partners.
  */
 export async function signUp(data: SignUpFormData): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
   const { username, email, password, phoneNumber, location } = data;
@@ -70,44 +76,14 @@ export async function signUp(data: SignUpFormData): Promise<{ success: boolean; 
   const cleanPhone = phoneNumber.trim();
   const cleanLocation = location.trim();
 
-  // 1. Try registering via Node.js API Gateway
+  // 1. Check if user already exists in Google Cloud Firestore
   try {
-    const res = await fetch(`${NODE_API_BASE}/api/auth/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: cleanUsername,
-        email: cleanEmail,
-        password,
-        phoneNumber: cleanPhone,
-        location: cleanLocation
-      })
-    });
-
-    const json = await res.json();
-    if (res.ok && json.success && json.user) {
-      const userProfile: UserProfile = json.user;
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userProfile));
-      if (json.token) localStorage.setItem(STORAGE_TOKEN_KEY, json.token);
-
-      // Save local backup account
-      saveLocalAccount({
-        user: userProfile,
-        passwordHash: password
-      });
-
-      return { success: true, user: userProfile };
-    } else if (res.status === 400 && json.message?.includes('already exists')) {
-      return { success: false, error: json.message };
+    const existingCloudUser = await getTravelerFromCloud(cleanEmail);
+    if (existingCloudUser) {
+      return { success: false, error: 'An account with this email address already exists in Cloud Firestore.' };
     }
-  } catch (apiErr) {
-    console.info('Node API unavailable for signup; using local fallback storage.');
-  }
-
-  // 2. Offline / Local Fallback Registration
-  const existingAccounts = getLocalAccounts();
-  if (existingAccounts.some(a => a.user.email.toLowerCase() === cleanEmail)) {
-    return { success: false, error: 'An account with this email address already exists' };
+  } catch (e) {
+    // Cloud query check note
   }
 
   const newProfile: UserProfile = {
@@ -119,13 +95,25 @@ export async function signUp(data: SignUpFormData): Promise<{ success: boolean; 
     createdAt: new Date().toISOString()
   };
 
-  saveLocalAccount({
-    user: newProfile,
-    passwordHash: password
-  });
+  // 2. Save directly to Google Cloud Firestore
+  await saveTravelerToCloud(newProfile);
+  await saveAccountVaultToCloud(cleanEmail, password);
+  await setActiveCloudSession(newProfile);
 
-  localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(newProfile));
-  localStorage.setItem(STORAGE_TOKEN_KEY, `tok_${Date.now()}`);
+  // 3. Also synchronize with backend Node.js API Gateway if reachable
+  try {
+    fetch(`${NODE_API_BASE}/api/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: cleanUsername,
+        email: cleanEmail,
+        password,
+        phoneNumber: cleanPhone,
+        location: cleanLocation
+      })
+    }).catch(() => {});
+  } catch (apiErr) {}
 
   return { success: true, user: newProfile };
 }
@@ -135,7 +123,7 @@ export async function signUp(data: SignUpFormData): Promise<{ success: boolean; 
  * - email
  * - password
  * 
- * Email and password are all that's required.
+ * Authenticates against Google Cloud Firestore.
  */
 export async function logIn(data: LoginFormData): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
   const { email, password } = data;
@@ -149,7 +137,27 @@ export async function logIn(data: LoginFormData): Promise<{ success: boolean; us
 
   const cleanEmail = email.trim().toLowerCase();
 
-  // 1. Try Node.js API Gateway
+  // 1. Check Default Demo Account
+  if (cleanEmail === DEFAULT_USER.email.toLowerCase() && (password === 'demo12345' || password === 'password')) {
+    await setActiveCloudSession(DEFAULT_USER);
+    return { success: true, user: DEFAULT_USER };
+  }
+
+  // 2. Verify against Google Cloud Firestore
+  try {
+    const isCloudValid = await verifyAccountVaultInCloud(cleanEmail, password);
+    if (isCloudValid) {
+      const cloudUser = await getTravelerFromCloud(cleanEmail);
+      if (cloudUser) {
+        await setActiveCloudSession(cloudUser);
+        return { success: true, user: cloudUser };
+      }
+    }
+  } catch (cloudErr) {
+    console.info('Cloud Firestore authentication note:', cloudErr);
+  }
+
+  // 3. Fallback: Node.js API Gateway
   try {
     const res = await fetch(`${NODE_API_BASE}/api/auth/login`, {
       method: 'POST',
@@ -160,50 +168,31 @@ export async function logIn(data: LoginFormData): Promise<{ success: boolean; us
     const json = await res.json();
     if (res.ok && json.success && json.user) {
       const userProfile: UserProfile = json.user;
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(userProfile));
-      if (json.token) localStorage.setItem(STORAGE_TOKEN_KEY, json.token);
+      await setActiveCloudSession(userProfile);
       return { success: true, user: userProfile };
     } else if (res.status === 401) {
       return { success: false, error: json.message || 'Invalid email or password' };
     }
-  } catch (apiErr) {
-    console.info('Node API unavailable for login; checking local storage accounts.');
-  }
-
-  // 2. Local Fallback Verification
-  // Check default demo account
-  if (cleanEmail === DEFAULT_USER.email.toLowerCase() && (password === 'demo12345' || password === 'password')) {
-    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(DEFAULT_USER));
-    return { success: true, user: DEFAULT_USER };
-  }
-
-  // Check registered local accounts
-  const accounts = getLocalAccounts();
-  const matched = accounts.find(a => a.user.email.toLowerCase() === cleanEmail);
-  if (matched && matched.passwordHash === password) {
-    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(matched.user));
-    return { success: true, user: matched.user };
-  }
+  } catch (apiErr) {}
 
   return { success: false, error: 'Invalid email or password. Please check your credentials.' };
 }
 
 /**
- * Log out active user
+ * Log out active user from Cloud Session
  */
-export function logOut(): void {
+export async function logOut(): Promise<void> {
   try {
-    localStorage.removeItem(STORAGE_USER_KEY);
-    localStorage.removeItem(STORAGE_TOKEN_KEY);
+    await setActiveCloudSession(null);
   } catch (e) {
-    console.warn('Error during logout:', e);
+    console.warn('Error during cloud logout:', e);
   }
 }
 
 /**
- * Update user profile details
+ * Update user profile details in Google Cloud Firestore
  */
-export function updateUserProfile(updates: Partial<UserProfile>): UserProfile | null {
+export async function updateUserProfile(updates: Partial<UserProfile>): Promise<UserProfile | null> {
   const current = getCurrentUser();
   if (!current) return null;
 
@@ -214,31 +203,7 @@ export function updateUserProfile(updates: Partial<UserProfile>): UserProfile | 
     email: current.email // preserve email as unique key
   };
 
-  localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(updated));
+  await saveTravelerToCloud(updated);
+  await setActiveCloudSession(updated);
   return updated;
-}
-
-// Helpers for local fallback storage
-interface StoredAccount {
-  user: UserProfile;
-  passwordHash: string;
-}
-
-function getLocalAccounts(): StoredAccount[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_ACCOUNTS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLocalAccount(account: StoredAccount): void {
-  try {
-    const accounts = getLocalAccounts().filter(a => a.user.email.toLowerCase() !== account.user.email.toLowerCase());
-    accounts.push(account);
-    localStorage.setItem(STORAGE_ACCOUNTS_KEY, JSON.stringify(accounts));
-  } catch (err) {
-    console.warn('Could not persist local account:', err);
-  }
 }

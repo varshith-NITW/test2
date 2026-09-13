@@ -9,6 +9,7 @@ import { HotelPartnerPortal } from './components/hotel/HotelPartnerPortal';
 import { LocalGuidePortal } from './components/guide/LocalGuidePortal';
 import { AuthModal } from './components/auth/AuthModal';
 import { getCurrentUser, logOut } from './services/authService';
+import { saveBookingToCloud, subscribeToCloudBookings } from './services/cloudStorageService';
 import { calculateSplitBreakdown } from './services/paymentSplitService';
 import { createBookingViaNodeAPI } from './services/apiClient';
 import { loadGoogleMapsScript } from './services/googleMapsService';
@@ -28,6 +29,27 @@ export function App() {
     loadGoogleMapsScript().catch((e) => {
       console.warn('Google Maps script load note:', e);
     });
+  }, []);
+
+  // Real-time Cloud Storage (Firestore) Live Booking Listener
+  useEffect(() => {
+    const unsubscribe = subscribeToCloudBookings((cloudBookings) => {
+      if (cloudBookings && cloudBookings.length > 0) {
+        setBookings((prev) => {
+          const merged = [...prev];
+          cloudBookings.forEach((cb) => {
+            const idx = merged.findIndex((b) => b.id === cb.id);
+            if (idx >= 0) {
+              merged[idx] = cb;
+            } else {
+              merged.unshift(cb);
+            }
+          });
+          return merged;
+        });
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   const [spots, setSpots] = useState<TouristSpot[]>(INITIAL_TOURIST_SPOTS);
@@ -111,7 +133,13 @@ export function App() {
 
   const handleBookingConfirmed = (newBooking: Booking) => {
     setBookings((prev) => [newBooking, ...prev]);
-    // Asynchronously synchronize booking record with backend Node.js API Gateway
+
+    // 1. Persist directly to Google Cloud Firestore
+    saveBookingToCloud(newBooking).catch((err) => {
+      console.info('Cloud Firestore sync note:', err.message);
+    });
+
+    // 2. Asynchronously synchronize booking record with backend Node.js API Gateway
     createBookingViaNodeAPI({
       hotelId: newBooking.hotelId,
       hotelName: newBooking.hotelName,
@@ -254,7 +282,9 @@ export function App() {
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-800">TravelAI Ecosystem</span>
             <span>&bull;</span>
-            <span>Direct Proximity & Footfall Verification</span>
+            <span className="text-sky-700 font-semibold flex items-center gap-1">
+              ☁️ Google Cloud Firestore Storage (Live Serverless Sync)
+            </span>
             <span>&bull;</span>
             <span className="text-emerald-700 font-semibold">100% Real Footfall Check-Ins Ranked</span>
           </div>
