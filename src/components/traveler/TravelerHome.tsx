@@ -15,10 +15,12 @@ import { AIPlaceRecommender } from './AIPlaceRecommender';
 import { ProximityRadarView } from './ProximityRadarView';
 import { TripPackageSummary } from './TripPackageSummary';
 import { RazorpayCheckoutModal } from './RazorpayCheckoutModal';
+import { BookedPlansBox } from './BookedPlansBox';
 import { WhyBetterShowcase } from '../comparison/WhyBetterShowcase';
 import { generateProximityInventoryForSpot } from '../../services/placesService';
 import { calculateHaversineDistance } from '../../services/spatialService';
 import { GeminiTouristRecommendation } from '../../services/geminiService';
+import { Compass, Ticket } from 'lucide-react';
 
 interface TravelerHomeProps {
   spots: TouristSpot[];
@@ -30,6 +32,7 @@ interface TravelerHomeProps {
   onAddSpot?: (spot: TouristSpot) => void;
   onAddInventory?: (inventory: { hotels: Hotel[]; restaurants: Restaurant[]; guides: Guide[] }) => void;
   currentUser?: import('../../types').UserProfile | null;
+  bookings?: Booking[];
 }
 
 export const TravelerHome: React.FC<TravelerHomeProps> = ({
@@ -40,8 +43,12 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
   onBookingSuccess,
   onAddSpot,
   onAddInventory,
-  currentUser
+  currentUser,
+  bookings = []
 }) => {
+  // Active sub-tab inside Traveler View: 'planner' vs 'my_bookings'
+  const [activeTab, setActiveTab] = useState<'planner' | 'my_bookings'>('planner');
+
   // Step layer state
   const [currentStep, setCurrentStep] = useState<StepLayer>('step1_spots');
 
@@ -156,6 +163,8 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
     if (onBookingSuccess) {
       onBookingSuccess(booking);
     }
+    setActiveTab('my_bookings');
+    scrollToPageTop();
   };
 
   const handleAddHospitalityInventory = (newHotels: Hotel[], newRestaurants: Restaurant[]) => {
@@ -205,76 +214,168 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
   }, [currentStep]);
 
   return (
-    <div ref={topAnchorRef} className="space-y-8 pb-16">
+    <div ref={topAnchorRef} className="space-y-6 pb-16">
       
-      {/* 4-Step Layer Wizard */}
-      <StepWizard
-        currentStep={currentStep}
-        onStepClick={(step) => {
-          if (step === 'step4_payment') {
-            setShowRazorpayModal(true);
-          } else {
-            handleStepTransition(step);
-          }
-        }}
-        hasSpotSelected={!!selectedSpot}
-        hasHotelSelected={!!selectedHotel}
-      />
+      {/* Top Traveler Sub-Nav Switcher (Explore & Build vs My Booked Plans Box) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('planner');
+              scrollToPageTop();
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'planner'
+                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Compass className="w-4 h-4" />
+            <span>Explore & Build Trip</span>
+          </button>
 
-      {/* Layer Step 1: Ask AI & Select Tourist Place */}
-      {currentStep === 'step1_spots' && (
-        <AIPlaceRecommender
-          spots={spots}
-          selectedSpotId={selectedSpotId}
-          aiPrompt={aiPrompt}
-          geminiResult={geminiResult}
-          onAiPromptChange={handleAiPromptChange}
-          onGeminiResultChange={handleGeminiResultChange}
-          onSelectSpot={handleSelectSpot}
-          onProceedToProximity={() => handleStepTransition('step2_proximity')}
-          onAddHospitalityInventory={handleAddHospitalityInventory}
-        />
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('my_bookings');
+              scrollToPageTop();
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'my_bookings'
+                ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/20'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Ticket className="w-4 h-4 text-emerald-400" />
+            <span>My Booked Plans</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+              activeTab === 'my_bookings' ? 'bg-emerald-400 text-slate-950' : 'bg-slate-200 text-slate-700'
+            }`}>
+              {bookings.length}
+            </span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-slate-500 pr-2">
+          {bookings.length > 0 && activeTab === 'planner' && (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('my_bookings');
+                scrollToPageTop();
+              }}
+              className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer text-xs"
+            >
+              <span>🎒 View {bookings.length} Confirmed Plan{bookings.length > 1 ? 's' : ''} &rarr;</span>
+            </button>
+          )}
+          <span className="text-slate-300 hidden sm:inline">|</span>
+          <span className="text-sky-700 font-semibold flex items-center gap-1 text-[11px]">
+            ☁️ Google Cloud Firestore Live Sync
+          </span>
+        </div>
+      </div>
+
+      {/* Tab 1: Dedicated Booked Plans Box */}
+      {activeTab === 'my_bookings' && (
+        <div className="space-y-6">
+          <BookedPlansBox
+            bookings={bookings}
+            onOpenPlanner={() => {
+              setActiveTab('planner');
+              scrollToPageTop();
+            }}
+          />
+        </div>
       )}
 
-      {/* Layer Step 2: Proximity Radar (Hotels, Restaurants, Certified Guides) */}
-      {currentStep === 'step2_proximity' && selectedSpot && (
-        <ProximityRadarView
-          selectedSpot={selectedSpot}
-          searchedPlace={searchedPlace}
-          hotels={hotels}
-          restaurants={restaurants}
-          guides={guides}
-          selectedHotel={selectedHotel}
-          selectedRoom={selectedRoom}
-          selectedRestaurantPass={selectedRestaurantPass}
-          selectedGuide={selectedGuide}
-          selectedGuidePackage={selectedGuidePackage}
-          onSelectHotel={handleSelectHotel}
-          onToggleRestaurantPass={handleToggleRestaurantPass}
-          onToggleGuide={handleToggleGuide}
-          onBackToSpots={() => handleStepTransition('step1_spots')}
-          onProceedToSummary={() => handleStepTransition('step3_summary')}
-        />
-      )}
+      {/* Tab 2: Trip Planner Wizard */}
+      {activeTab === 'planner' && (
+        <div className="space-y-8">
+          {/* 4-Step Layer Wizard */}
+          <StepWizard
+            currentStep={currentStep}
+            onStepClick={(step) => {
+              if (step === 'step4_payment') {
+                setShowRazorpayModal(true);
+              } else {
+                handleStepTransition(step);
+              }
+            }}
+            hasSpotSelected={!!selectedSpot}
+            hasHotelSelected={!!selectedHotel}
+          />
 
-      {/* Layer Step 3: Unified Itinerary & Package Summary */}
-      {currentStep === 'step3_summary' && selectedSpot && selectedHotel && selectedRoom && (
-        <TripPackageSummary
-          spot={selectedSpot}
-          searchedPlace={searchedPlace}
-          hotel={selectedHotel}
-          room={selectedRoom}
-          nights={nights}
-          restaurantPass={selectedRestaurantPass}
-          guide={selectedGuide}
-          guidePackage={selectedGuidePackage}
-          onBackToRadar={() => handleStepTransition('step2_proximity')}
-          onProceedToRazorpay={(tier, promo) => {
-            if (tier) setAffordabilityTier(tier);
-            if (promo) setAppliedPromoCode(promo);
-            setShowRazorpayModal(true);
-          }}
-        />
+          {/* Layer Step 1: Ask AI & Select Tourist Place */}
+          {currentStep === 'step1_spots' && (
+            <AIPlaceRecommender
+              spots={spots}
+              selectedSpotId={selectedSpotId}
+              aiPrompt={aiPrompt}
+              geminiResult={geminiResult}
+              onAiPromptChange={handleAiPromptChange}
+              onGeminiResultChange={handleGeminiResultChange}
+              onSelectSpot={handleSelectSpot}
+              onProceedToProximity={() => handleStepTransition('step2_proximity')}
+              onAddHospitalityInventory={handleAddHospitalityInventory}
+            />
+          )}
+
+          {/* Layer Step 2: Proximity Radar (Hotels, Restaurants, Certified Guides) */}
+          {currentStep === 'step2_proximity' && selectedSpot && (
+            <ProximityRadarView
+              selectedSpot={selectedSpot}
+              searchedPlace={searchedPlace}
+              hotels={hotels}
+              restaurants={restaurants}
+              guides={guides}
+              selectedHotel={selectedHotel}
+              selectedRoom={selectedRoom}
+              selectedRestaurantPass={selectedRestaurantPass}
+              selectedGuide={selectedGuide}
+              selectedGuidePackage={selectedGuidePackage}
+              onSelectHotel={handleSelectHotel}
+              onToggleRestaurantPass={handleToggleRestaurantPass}
+              onToggleGuide={handleToggleGuide}
+              onBackToSpots={() => handleStepTransition('step1_spots')}
+              onProceedToSummary={() => handleStepTransition('step3_summary')}
+            />
+          )}
+
+          {/* Layer Step 3: Unified Itinerary & Package Summary */}
+          {currentStep === 'step3_summary' && selectedSpot && selectedHotel && selectedRoom && (
+            <TripPackageSummary
+              spot={selectedSpot}
+              searchedPlace={searchedPlace}
+              hotel={selectedHotel}
+              room={selectedRoom}
+              nights={nights}
+              restaurantPass={selectedRestaurantPass}
+              guide={selectedGuide}
+              guidePackage={selectedGuidePackage}
+              onBackToRadar={() => handleStepTransition('step2_proximity')}
+              onProceedToRazorpay={(tier, promo) => {
+                if (tier) setAffordabilityTier(tier);
+                if (promo) setAppliedPromoCode(promo);
+                setShowRazorpayModal(true);
+              }}
+            />
+          )}
+
+          {/* Dedicated Booked Plans Box also rendered on the main page when bookings exist */}
+          {bookings.length > 0 && (
+            <div className="pt-4 border-t border-slate-200">
+              <BookedPlansBox
+                bookings={bookings}
+                onOpenPlanner={() => {
+                  setActiveTab('planner');
+                  scrollToPageTop();
+                }}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Layer Step 4: Razorpay Payment Gateway Modal */}

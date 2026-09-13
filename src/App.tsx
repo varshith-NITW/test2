@@ -217,6 +217,7 @@ export function App() {
             onAddSpot={handleAddSpot}
             onAddInventory={handleAddInventory}
             currentUser={currentUser}
+            bookings={bookings}
           />
         )}
 
@@ -266,9 +267,9 @@ export function App() {
         />
       )}
 
-      {/* Traveler Authentication Modal (Sign Up with 5 terms / Sign In with 2 terms) */}
+      {/* Traveler Authentication Modal (Sign Up with 5 terms / Sign In with 2 terms) - Strictly Traveler View */}
       <AuthModal
-        isOpen={authModalState.isOpen}
+        isOpen={authModalState.isOpen && currentPersona === 'traveler'}
         initialTab={authModalState.tab}
         onClose={() => setAuthModalState(prev => ({ ...prev, isOpen: false }))}
         onAuthSuccess={(user) => {

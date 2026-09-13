@@ -112,109 +112,111 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </nav>
 
-            {/* Traveler Authentication Status Chip & Dropdown */}
-            <div className="relative">
-              {currentUser ? (
-                <div>
+            {/* Traveler Authentication Status Chip & Dropdown (Strictly Traveler View Only) */}
+            {currentPersona === 'traveler' && (
+              <div className="relative">
+                {currentUser ? (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setShowProfileMenu(!showProfileMenu)}
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer text-left"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                        {currentUser.username.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="hidden sm:block leading-tight">
+                        <div className="text-xs font-bold text-slate-900 truncate max-w-[110px]">
+                          {currentUser.username}
+                        </div>
+                        <div className="text-[10px] text-slate-500 truncate max-w-[110px]">
+                          📍 {currentUser.location}
+                        </div>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+
+                    {/* Profile Popover Menu */}
+                    {showProfileMenu && (
+                      <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 animate-in zoom-in-95 duration-150">
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-base shadow-sm">
+                            {currentUser.username.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="overflow-hidden">
+                            <h4 className="text-xs font-black text-slate-900 truncate">
+                              {currentUser.username}
+                            </h4>
+                            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.2 rounded border border-emerald-200">
+                              Active Traveler
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="py-3 space-y-2 text-xs text-slate-600 border-b border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate text-[11px] text-slate-700 font-medium">{currentUser.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="text-[11px] text-slate-700 font-medium">{currentUser.phoneNumber}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="text-[11px] text-slate-700 font-medium">{currentUser.location}</span>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 space-y-2">
+                          <div className="text-[10px] text-sky-700 bg-sky-50 px-2 py-1.5 rounded-lg border border-sky-200 flex items-center gap-1.5 font-semibold">
+                            <Cloud className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                            <span>Google Cloud Firestore Storage (Live Sync)</span>
+                          </div>
+
+                          <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>Contact details dispatched on booking. Password encrypted.</span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowProfileMenu(false);
+                              onOpenAuth?.('signup');
+                            }}
+                            className="w-full text-left px-2.5 py-1.5 text-xs text-indigo-600 hover:bg-indigo-50 rounded-lg font-bold transition-colors cursor-pointer"
+                          >
+                            + Switch / Register New Traveler
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowProfileMenu(false);
+                              onSignOut?.();
+                            }}
+                            className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg font-bold transition-colors cursor-pointer"
+                          >
+                            <span>Sign Out</span>
+                            <LogOut className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer text-left"
+                    onClick={() => onOpenAuth?.('login')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-sm shadow-indigo-600/20 cursor-pointer"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
-                      {currentUser.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="hidden sm:block leading-tight">
-                      <div className="text-xs font-bold text-slate-900 truncate max-w-[110px]">
-                        {currentUser.username}
-                      </div>
-                      <div className="text-[10px] text-slate-500 truncate max-w-[110px]">
-                        📍 {currentUser.location}
-                      </div>
-                    </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    <User className="w-3.5 h-3.5" />
+                    <span>Sign In</span>
                   </button>
-
-                  {/* Profile Popover Menu */}
-                  {showProfileMenu && (
-                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 animate-in zoom-in-95 duration-150">
-                      <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-base shadow-sm">
-                          {currentUser.username.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="overflow-hidden">
-                          <h4 className="text-xs font-black text-slate-900 truncate">
-                            {currentUser.username}
-                          </h4>
-                          <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.2 rounded border border-emerald-200">
-                            Active Traveler
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="py-3 space-y-2 text-xs text-slate-600 border-b border-slate-100">
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="truncate text-[11px] text-slate-700 font-medium">{currentUser.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="text-[11px] text-slate-700 font-medium">{currentUser.phoneNumber}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="text-[11px] text-slate-700 font-medium">{currentUser.location}</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 space-y-2">
-                        <div className="text-[10px] text-sky-700 bg-sky-50 px-2 py-1.5 rounded-lg border border-sky-200 flex items-center gap-1.5 font-semibold">
-                          <Cloud className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                          <span>Google Cloud Firestore Storage (Live Sync)</span>
-                        </div>
-
-                        <div className="text-[10px] text-slate-400 flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Contact details dispatched on booking. Password encrypted.</span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowProfileMenu(false);
-                            onOpenAuth?.('signup');
-                          }}
-                          className="w-full text-left px-2.5 py-1.5 text-xs text-indigo-600 hover:bg-indigo-50 rounded-lg font-bold transition-colors cursor-pointer"
-                        >
-                          + Switch / Register New Traveler
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowProfileMenu(false);
-                            onSignOut?.();
-                          }}
-                          className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg font-bold transition-colors cursor-pointer"
-                        >
-                          <span>Sign Out</span>
-                          <LogOut className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onOpenAuth?.('login')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-sm shadow-indigo-600/20 cursor-pointer"
-                >
-                  <User className="w-3.5 h-3.5" />
-                  <span>Sign In</span>
-                </button>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
 
         </div>
