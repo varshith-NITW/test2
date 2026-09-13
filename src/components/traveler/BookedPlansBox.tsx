@@ -214,28 +214,28 @@ export const BookedPlansBox: React.FC<BookedPlansBoxProps> = ({
                     <div>
                       <span className="text-slate-400 text-[10px] block">Traveler Username</span>
                       <strong className="text-slate-900 truncate block">
-                        {booking.travelerName || 'Varshith Sharma'}
+                        {booking.travelerName || 'Guest Traveler'}
                       </strong>
                     </div>
                     <div>
                       <span className="text-slate-400 text-[10px] block">Contact Phone</span>
                       <strong className="text-emerald-700 truncate block flex items-center gap-1">
                         <Phone className="w-3 h-3 text-emerald-600" />
-                        {booking.travelerPhone || '+91 98490 12345'}
+                        {booking.travelerPhone || 'Not Provided'}
                       </strong>
                     </div>
                     <div>
                       <span className="text-slate-400 text-[10px] block">Email Voucher</span>
                       <strong className="text-slate-800 truncate block flex items-center gap-1">
                         <Mail className="w-3 h-3 text-slate-400" />
-                        {booking.travelerEmail || 'varshith@example.com'}
+                        {booking.travelerEmail || 'Not Provided'}
                       </strong>
                     </div>
                     <div>
                       <span className="text-slate-400 text-[10px] block">Traveler City</span>
                       <strong className="text-slate-800 truncate block flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-slate-400" />
-                        {booking.travelerLocation || 'Surat, Gujarat'}
+                        {booking.travelerLocation || 'Not Specified'}
                       </strong>
                     </div>
                   </div>
@@ -356,10 +356,10 @@ export const BookedPlansBox: React.FC<BookedPlansBoxProps> = ({
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-slate-300">
-                  <div>Name: <strong className="text-white">{selectedPassBooking.travelerName || 'Varshith Sharma'}</strong></div>
-                  <div>Phone: <strong className="text-emerald-300">{selectedPassBooking.travelerPhone || '+91 98490 12345'}</strong></div>
-                  <div>Email: <strong className="text-slate-200">{selectedPassBooking.travelerEmail || 'varshith@example.com'}</strong></div>
-                  <div>City: <strong className="text-slate-200">{selectedPassBooking.travelerLocation || 'Surat, Gujarat'}</strong></div>
+                  <div>Name: <strong className="text-white">{selectedPassBooking.travelerName || 'Guest Traveler'}</strong></div>
+                  <div>Phone: <strong className="text-emerald-300">{selectedPassBooking.travelerPhone || 'Not Provided'}</strong></div>
+                  <div>Email: <strong className="text-slate-200">{selectedPassBooking.travelerEmail || 'Not Provided'}</strong></div>
+                  <div>City: <strong className="text-slate-200">{selectedPassBooking.travelerLocation || 'Not Specified'}</strong></div>
                 </div>
               </div>
 

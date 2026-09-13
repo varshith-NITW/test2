@@ -46,6 +46,27 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
   currentUser,
   bookings = []
 }) => {
+  // Filter bookings strictly for the current logged-in traveler
+  const userBookings = React.useMemo(() => {
+    if (!currentUser) return [];
+    const currentUserId = currentUser.id ? currentUser.id.toLowerCase().trim() : '';
+    const currentUserEmail = currentUser.email ? currentUser.email.toLowerCase().trim() : '';
+
+    return bookings.filter((b) => {
+      const bUserId = b.userId ? b.userId.toLowerCase().trim() : '';
+      const bTravelerEmail = b.travelerEmail ? b.travelerEmail.toLowerCase().trim() : '';
+      const bGuestEmail = (b as any).guestEmail ? (b as any).guestEmail.toLowerCase().trim() : '';
+
+      const idMatch = !!(currentUserId && bUserId && bUserId === currentUserId);
+      const emailMatch = !!(
+        (currentUserEmail && bTravelerEmail && bTravelerEmail === currentUserEmail) ||
+        (currentUserEmail && bGuestEmail && bGuestEmail === currentUserEmail)
+      );
+
+      return idMatch || emailMatch;
+    });
+  }, [bookings, currentUser]);
+
   // Active sub-tab inside Traveler View: 'planner' vs 'my_bookings'
   const [activeTab, setActiveTab] = useState<'planner' | 'my_bookings'>('planner');
 
@@ -252,13 +273,13 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
               activeTab === 'my_bookings' ? 'bg-emerald-400 text-slate-950' : 'bg-slate-200 text-slate-700'
             }`}>
-              {bookings.length}
+              {userBookings.length}
             </span>
           </button>
         </div>
 
         <div className="flex items-center gap-3 text-xs text-slate-500 pr-2">
-          {bookings.length > 0 && activeTab === 'planner' && (
+          {userBookings.length > 0 && activeTab === 'planner' && (
             <button
               type="button"
               onClick={() => {
@@ -267,7 +288,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
               }}
               className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer text-xs"
             >
-              <span>🎒 View {bookings.length} Confirmed Plan{bookings.length > 1 ? 's' : ''} &rarr;</span>
+              <span>🎒 View {userBookings.length} Confirmed Plan{userBookings.length > 1 ? 's' : ''} &rarr;</span>
             </button>
           )}
           <span className="text-slate-300 hidden sm:inline">|</span>
@@ -281,7 +302,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
       {activeTab === 'my_bookings' && (
         <div className="space-y-6">
           <BookedPlansBox
-            bookings={bookings}
+            bookings={userBookings}
             onOpenPlanner={() => {
               setActiveTab('planner');
               scrollToPageTop();
@@ -364,10 +385,10 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           )}
 
           {/* Dedicated Booked Plans Box also rendered on the main page when bookings exist */}
-          {bookings.length > 0 && (
+          {userBookings.length > 0 && (
             <div className="pt-4 border-t border-slate-200">
               <BookedPlansBox
-                bookings={bookings}
+                bookings={userBookings}
                 onOpenPlanner={() => {
                   setActiveTab('planner');
                   scrollToPageTop();

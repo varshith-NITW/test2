@@ -261,6 +261,27 @@ export function App() {
     }
   };
 
+  // Filter bookings strictly for the currently authenticated traveler
+  const travelerBookings = React.useMemo(() => {
+    if (!currentUser) return [];
+    const currentUserId = currentUser.id ? currentUser.id.toLowerCase().trim() : '';
+    const currentUserEmail = currentUser.email ? currentUser.email.toLowerCase().trim() : '';
+
+    return bookings.filter((b) => {
+      const bUserId = b.userId ? b.userId.toLowerCase().trim() : '';
+      const bTravelerEmail = b.travelerEmail ? b.travelerEmail.toLowerCase().trim() : '';
+      const bGuestEmail = (b as any).guestEmail ? (b as any).guestEmail.toLowerCase().trim() : '';
+
+      const idMatch = !!(currentUserId && bUserId && bUserId === currentUserId);
+      const emailMatch = !!(
+        (currentUserEmail && bTravelerEmail && bTravelerEmail === currentUserEmail) ||
+        (currentUserEmail && bGuestEmail && bGuestEmail === currentUserEmail)
+      );
+
+      return idMatch || emailMatch;
+    });
+  }, [bookings, currentUser]);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-emerald-500 selection:text-white">
       
@@ -268,7 +289,7 @@ export function App() {
       <Navbar
         currentPersona={currentPersona}
         onSelectPersona={(persona) => setCurrentPersona(persona)}
-        bookingCount={bookings.length}
+        bookingCount={travelerBookings.length}
         onScrollToComparison={handleScrollToComparison}
         currentUser={currentUser}
         onOpenAuth={(tab) => setAuthModalState({ isOpen: true, tab: tab || 'login' })}
@@ -297,7 +318,7 @@ export function App() {
               onAddSpot={handleAddSpot}
               onAddInventory={handleAddInventory}
               currentUser={currentUser}
-              bookings={bookings}
+              bookings={travelerBookings}
             />
           ) : (
             <TravelerAuthGate

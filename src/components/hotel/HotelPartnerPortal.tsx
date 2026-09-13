@@ -608,19 +608,19 @@ export const HotelPartnerPortal: React.FC<HotelPartnerPortalProps> = ({
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-700">
                           <div>
                             <span className="text-[10px] text-slate-400 block">Traveler:</span>
-                            <strong className="text-slate-900 truncate block">{b.travelerName || 'Varshith Sharma'}</strong>
+                            <strong className="text-slate-900 truncate block">{b.travelerName || 'Guest Traveler'}</strong>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-400 block">Phone:</span>
-                            <strong className="text-emerald-700 truncate block">{b.travelerPhone || '+91 98490 12345'}</strong>
+                            <strong className="text-emerald-700 truncate block">{b.travelerPhone || 'Not Provided'}</strong>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-400 block">Email:</span>
-                            <strong className="text-slate-800 truncate block">{b.travelerEmail || 'varshith@example.com'}</strong>
+                            <strong className="text-slate-800 truncate block">{b.travelerEmail || 'Not Provided'}</strong>
                           </div>
                           <div>
                             <span className="text-[10px] text-slate-400 block">Origin City:</span>
-                            <strong className="text-blue-700 truncate block">{b.travelerLocation || 'Surat, Gujarat'}</strong>
+                            <strong className="text-blue-700 truncate block">{b.travelerLocation || 'Not Specified'}</strong>
                           </div>
                         </div>
                         <div className="mt-2 text-[10px] text-slate-400 flex items-center gap-1.5">

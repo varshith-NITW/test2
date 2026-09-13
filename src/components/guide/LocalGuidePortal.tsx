@@ -310,15 +310,15 @@ export const LocalGuidePortal: React.FC<LocalGuidePortalProps> = ({
                     </div>
                     <div>
                       <span className="text-slate-400 text-[10px] block">Contact Phone</span>
-                      <strong className="text-emerald-700 truncate block">{b.travelerPhone || '+91 98490 12345'}</strong>
+                      <strong className="text-emerald-700 truncate block">{b.travelerPhone || 'Not Provided'}</strong>
                     </div>
                     <div>
                       <span className="text-slate-400 text-[10px] block">Email Voucher</span>
-                      <strong className="text-slate-800 truncate block">{b.travelerEmail || 'varshith@example.com'}</strong>
+                      <strong className="text-slate-800 truncate block">{b.travelerEmail || 'Not Provided'}</strong>
                     </div>
                     <div>
                       <span className="text-slate-400 text-[10px] block">Origin City</span>
-                      <strong className="text-blue-700 truncate block">{b.travelerLocation || 'Surat, Gujarat'}</strong>
+                      <strong className="text-blue-700 truncate block">{b.travelerLocation || 'Not Specified'}</strong>
                     </div>
                   </div>
 
