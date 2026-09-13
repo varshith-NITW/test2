@@ -34,7 +34,9 @@ import {
   getGeminiApiKey,
   setGeminiApiKey,
   isCustomGeminiApiKey,
-  getMaskedGeminiApiKey
+  getMaskedGeminiApiKey,
+  getAuthenticRestaurantImage,
+  getAuthenticHotelImage
 } from '../../services/geminiService';
 
 interface AIPlaceRecommenderProps {
@@ -599,35 +601,48 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
               <span>Recommended Hotels ({hospitalityData.hotels.length})</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {hospitalityData.hotels.map((h, idx) => (
-                <div key={idx} className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <h5 className="text-xs font-bold text-white">{h.name}</h5>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 shrink-0">
-                      {h.category}
-                    </span>
-                  </div>
-
-                  <div className="text-xs font-extrabold text-emerald-400">
-                    {h.priceRange}
-                  </div>
-
-                  <div className="text-[11px] text-slate-300">
-                    <strong className="text-slate-400">Area:</strong> {h.locationArea}
-                  </div>
-
-                  {h.features && h.features.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {h.features.slice(0, 3).map((f, fIdx) => (
-                        <span key={fIdx} className="text-[10px] px-2 py-0.5 rounded bg-slate-700/60 text-slate-300">
-                          {f}
-                        </span>
-                      ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {hospitalityData.hotels.map((h, idx) => {
+                const hotelImg = getAuthenticHotelImage(h.name, h.category);
+                return (
+                  <div key={idx} className="bg-slate-800/90 border border-slate-700/80 rounded-2xl overflow-hidden shadow-lg flex flex-col hover:border-sky-500/50 transition-all group">
+                    <div className="relative h-36 w-full overflow-hidden bg-slate-900">
+                      <img 
+                        src={hotelImg} 
+                        alt={h.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-sm text-sky-300 text-[10px] font-bold border border-sky-500/30">
+                        {h.category}
+                      </div>
+                      <div className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-emerald-950/90 backdrop-blur-sm text-emerald-300 text-xs font-black border border-emerald-500/30">
+                        {h.priceRange}
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
+
+                    <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h5 className="text-xs sm:text-sm font-bold text-white leading-snug">{h.name}</h5>
+                        <div className="text-[11px] text-slate-300 mt-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-sky-400 shrink-0" />
+                          <span className="text-slate-300 truncate">{h.locationArea}</span>
+                        </div>
+                      </div>
+
+                      {h.features && h.features.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {h.features.slice(0, 3).map((f, fIdx) => (
+                            <span key={fIdx} className="text-[10px] px-2 py-0.5 rounded bg-slate-700/60 text-slate-300 border border-slate-600/30">
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -638,29 +653,43 @@ export const AIPlaceRecommender: React.FC<AIPlaceRecommenderProps> = ({
               <span>Recommended Restaurants &amp; Cafes ({hospitalityData.restaurants.length})</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {hospitalityData.restaurants.map((r, idx) => (
-                <div key={idx} className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <h5 className="text-xs font-bold text-white">{r.name}</h5>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                      {r.cuisineType.split('&')[0].trim()}
-                    </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {hospitalityData.restaurants.map((r, idx) => {
+                const restImg = getAuthenticRestaurantImage(r.name, r.cuisineType, r.mustTryDishes);
+                return (
+                  <div key={idx} className="bg-slate-800/90 border border-slate-700/80 rounded-2xl overflow-hidden shadow-lg flex flex-col hover:border-amber-500/50 transition-all group">
+                    <div className="relative h-36 w-full overflow-hidden bg-slate-900">
+                      <img 
+                        src={restImg} 
+                        alt={r.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-sm text-amber-300 text-[10px] font-bold border border-amber-500/30">
+                        {r.cuisineType.split('&')[0].trim()}
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h5 className="text-xs sm:text-sm font-bold text-white leading-snug">{r.name}</h5>
+                        {r.mustTryDishes && r.mustTryDishes.length > 0 && (
+                          <div className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                            <span className="text-amber-400 font-bold">Must-Try: </span>
+                            <span className="text-slate-200">{r.mustTryDishes.join(' • ')}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {r.atmosphere && (
+                        <div className="text-[11px] text-slate-400 italic bg-slate-900/60 p-2 rounded-xl border border-slate-700/50 line-clamp-2">
+                          &ldquo;{r.atmosphere}&rdquo;
+                        </div>
+                      )}
+                    </div>
                   </div>
-
-                  {r.mustTryDishes && r.mustTryDishes.length > 0 && (
-                    <div className="text-[11px] text-slate-300">
-                      <strong className="text-amber-300">Must try:</strong> {r.mustTryDishes.join(', ')}
-                    </div>
-                  )}
-
-                  {r.atmosphere && (
-                    <div className="text-[11px] text-slate-400 italic line-clamp-2">
-                      &ldquo;{r.atmosphere}&rdquo;
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

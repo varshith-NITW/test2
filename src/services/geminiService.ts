@@ -1513,6 +1513,100 @@ export function convertGeminiDestinationToSpot(
 }
 
 /**
+ * Resolves authentic, context-matched photography for restaurants based on their actual cuisine and dishes
+ */
+export function getAuthenticRestaurantImage(
+  name: string,
+  cuisineType?: string,
+  mustTryDishes?: string[]
+): string {
+  const text = `${name} ${cuisineType || ''} ${(mustTryDishes || []).join(' ')}`.toLowerCase();
+
+  // 1. Gujarati Thali / Royal Feast / Sasumaa / Kansar
+  if (text.includes('thali') || text.includes('sasumaa') || text.includes('kansar') || text.includes('undhiyu') || text.includes('kathiyawadi') || text.includes('dal baati')) {
+    return 'https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 2. Locho / Khaman / Dhokla / Surti Farsan / Jaani
+  if (text.includes('locho') || text.includes('khaman') || text.includes('dhokla') || text.includes('farsan') || text.includes('sev khamani')) {
+    return 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 3. Cold Coco / Chocolate / Milkshake / Ice Cream / A-One
+  if (text.includes('coco') || text.includes('chocolate') || text.includes('shake') || text.includes('ice cream') || text.includes('dessert') || text.includes('kulfi') || text.includes('falooda')) {
+    return 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 4. Bhajiya / Pakoda / Fritters / Dumas Beach
+  if (text.includes('bhajiya') || text.includes('pakoda') || text.includes('fritter') || text.includes('lashkari') || text.includes('dumas')) {
+    return 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 5. Biryani / Dum Pulao / Shadab / Bawarchi
+  if (text.includes('biryani') || text.includes('pulao') || text.includes('shadab') || text.includes('dum')) {
+    return 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 6. Kebabs / Tandoor / Galouti / Tunday / Karim's / Mughlai
+  if (text.includes('kebab') || text.includes('tunday') || text.includes('galouti') || text.includes('mughlai') || text.includes('karim') || text.includes('tandoor') || text.includes('tikka')) {
+    return 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 7. Coastal Seafood / Fish Curry / Prawns / Karimeen
+  if (text.includes('fish') || text.includes('seafood') || text.includes('prawn') || text.includes('coastal') || text.includes('karimeen') || text.includes('goan')) {
+    return 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 8. Dosa / South Indian / Idli / Sambar / Filter Coffee
+  if (text.includes('dosa') || text.includes('idli') || text.includes('vada') || text.includes('sambar') || text.includes('south indian') || text.includes('filter coffee')) {
+    return 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 9. Street Tea / Masala Chai / Irani Chai / Nimrah
+  if (text.includes('chai') || text.includes('tea') || text.includes('irani') || text.includes('bun maska')) {
+    return 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 10. North Indian Curries / Naan / Dal Makhani / Paneer
+  if (text.includes('curry') || text.includes('paneer') || text.includes('dal') || text.includes('naan') || text.includes('butter chicken') || text.includes('north indian')) {
+    return 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 11. Cafe / Bistro / Bakery / Coffee
+  if (text.includes('cafe') || text.includes('coffee') || text.includes('bistro') || text.includes('bakery')) {
+    return 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  // 12. Generational Authentic Dining Default
+  return 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=85';
+}
+
+/**
+ * Resolves authentic photography for hotels based on their name and tier
+ */
+export function getAuthenticHotelImage(name: string, category?: string): string {
+  const text = `${name} ${category || ''}`.toLowerCase();
+
+  if (text.includes('marriott') || text.includes('riverfront') || text.includes('5-star')) {
+    return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=85';
+  }
+  if (text.includes('bhagwati') || text.includes('palace') || text.includes('heritage') || text.includes('falaknuma')) {
+    return 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1200&q=85';
+  }
+  if (text.includes('lords') || text.includes('plaza') || text.includes('business') || text.includes('4-star')) {
+    return 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=85';
+  }
+  if (text.includes('courtyard') || text.includes('resort') || text.includes('pool')) {
+    return 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=85';
+  }
+  if (text.includes('texas') || text.includes('inn') || text.includes('bellevue') || text.includes('goldi') || text.includes('budget')) {
+    return 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=85';
+  }
+
+  return 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=85';
+}
+
+/**
  * Converts Gemini recommended hotels into platform Hotel entities
  */
 export function convertHospitalityHotelsToHotels(
@@ -1524,13 +1618,6 @@ export function convertHospitalityHotelsToHotels(
     'Boutique Stay': 4500,
     'Smart Budget Stay': 2600
   };
-
-  const images = [
-    'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=85',
-    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1400&q=85',
-    'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1400&q=85',
-    'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1400&q=85'
-  ];
 
   return geminiHotels.map((gh, idx) => {
     let price = 3500;
@@ -1546,6 +1633,8 @@ export function convertHospitalityHotelsToHotels(
       : gh.category.includes('Boutique') 
         ? 'Boutique Stay' 
         : 'Urban Comfort';
+
+    const hotelImg = getAuthenticHotelImage(gh.name, gh.category);
 
     return {
       id: `hotel-gemini-${idx}-${gh.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
@@ -1586,7 +1675,7 @@ export function convertHospitalityHotelsToHotels(
       googlePlaceId: `ChIJ_h_${gh.name.replace(/[^a-zA-Z0-9]/g, '_')}`,
       googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${gh.name} ${spot.city}`)}`,
       footfallRank: idx + 1,
-      image: images[idx % images.length],
+      image: hotelImg,
       businessRegNumber: `GST36GEMINI${idx}992`,
       partnershipModel: 'hybrid',
       guideReferralKickbackPercent: 0.06,
@@ -1602,12 +1691,6 @@ export function convertHospitalityRestaurantsToRestaurants(
   geminiRests: GeminiHospitalityRestaurant[],
   spot: TouristSpot
 ): Restaurant[] {
-  const images = [
-    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1400&q=85',
-    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1400&q=85',
-    'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1400&q=85'
-  ];
-
   return geminiRests.map((gr, idx) => {
     const dishes = gr.mustTryDishes.map((dish, dIdx) => ({
       name: dish,
@@ -1615,6 +1698,8 @@ export function convertHospitalityRestaurantsToRestaurants(
       description: `Signature culinary preparation at ${gr.name}`,
       isVeg: !dish.toLowerCase().includes('mutton') && !dish.toLowerCase().includes('fish') && !dish.toLowerCase().includes('chicken') && !dish.toLowerCase().includes('prawn') && !dish.toLowerCase().includes('kebab')
     }));
+
+    const restImg = getAuthenticRestaurantImage(gr.name, gr.cuisineType, gr.mustTryDishes);
 
     return {
       id: `rest-gemini-${idx}-${gr.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
@@ -1634,7 +1719,7 @@ export function convertHospitalityRestaurantsToRestaurants(
       famousDishes: dishes,
       diningVoucherDiscountPercent: 15,
       diningVoucherPrice: 425,
-      image: images[idx % images.length],
+      image: restImg,
       googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${gr.name} ${spot.city}`)}`,
       distanceKm: 0.5 + idx * 0.4,
       openingHours: '11:30 AM - 11:00 PM',
