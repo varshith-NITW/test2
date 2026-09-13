@@ -14,6 +14,8 @@ interface NavbarProps {
   onSignOut?: () => void;
   authenticatedHotel?: import('../types').Hotel | null;
   onHotelSignOut?: () => void;
+  authenticatedGuide?: import('../types').Guide | null;
+  onGuideSignOut?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -25,7 +27,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onSignOut,
   authenticatedHotel,
-  onHotelSignOut
+  onHotelSignOut,
+  authenticatedGuide,
+  onGuideSignOut
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState<boolean>(false);
 
@@ -236,6 +240,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                       <div className="text-[10px] text-emerald-700 font-semibold truncate max-w-[120px]">
                         {authenticatedHotel.joinedDirectProgram ? '✓ Direct Partner' : 'Standard Host'}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">
+                    <Lock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Portal Locked</span>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Guide Authentication Status Chip in Navbar (When on Guide Portal) */}
+            {currentPersona === 'guide' && (
+              <div className="relative">
+                {authenticatedGuide ? (
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="w-7 h-7 rounded-lg bg-amber-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                      🧑‍💼
+                    </div>
+                    <div className="hidden sm:block leading-tight">
+                      <div className="text-xs font-bold text-slate-900 truncate max-w-[120px]">
+                        {authenticatedGuide.name}
+                      </div>
+                      <div className="text-[10px] text-amber-800 font-semibold truncate max-w-[120px]">
+                        ✓ {authenticatedGuide.verificationId}
                       </div>
                     </div>
                   </div>

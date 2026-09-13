@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Guide, Booking, Hotel } from '../../types';
-import { ShieldCheck, Award, Calendar, DollarSign, Clock, MapPin, CheckCircle2, UserCheck, Plus } from 'lucide-react';
+import { ShieldCheck, Award, Calendar, DollarSign, Clock, MapPin, CheckCircle2, UserCheck, Plus, LogOut, Phone, Mail } from 'lucide-react';
+import { GuideAuthGate } from './GuideAuthGate';
 
 interface LocalGuidePortalProps {
   guides: Guide[];
@@ -8,6 +9,9 @@ interface LocalGuidePortalProps {
   bookings: Booking[];
   onUpdateGuidePackages: (updatedGuide: Guide) => void;
   onRegisterNewGuide: (newGuide: Guide) => void;
+  authenticatedGuide?: Guide | null;
+  onGuideLogin?: (guide: Guide) => void;
+  onGuideLogout?: () => void;
 }
 
 export const LocalGuidePortal: React.FC<LocalGuidePortalProps> = ({
@@ -15,9 +19,29 @@ export const LocalGuidePortal: React.FC<LocalGuidePortalProps> = ({
   hotels,
   bookings,
   onUpdateGuidePackages,
-  onRegisterNewGuide
+  onRegisterNewGuide,
+  authenticatedGuide,
+  onGuideLogin,
+  onGuideLogout
 }) => {
-  const [selectedGuideId, setSelectedGuideId] = useState<string>(guides[0]?.id || '');
+  // If portal is locked behind authentication, display the GuideAuthGate
+  if (!authenticatedGuide) {
+    return (
+      <div className="pb-16">
+        <GuideAuthGate
+          existingGuides={guides}
+          onAuthSuccess={(guide) => {
+            onRegisterNewGuide(guide);
+            if (onGuideLogin) {
+              onGuideLogin(guide);
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
+  const [selectedGuideId, setSelectedGuideId] = useState<string>(authenticatedGuide.id || guides[0]?.id || '');
   const [showRegisterModal, setShowRegisterModal] = useState<boolean>(false);
 
   // New Guide Registration Form State
@@ -29,7 +53,7 @@ export const LocalGuidePortal: React.FC<LocalGuidePortalProps> = ({
   const [newFullDay, setNewFullDay] = useState<number>(3200);
   const [newPhoto, setNewPhoto] = useState<number>(2200);
 
-  const activeGuide = guides.find(g => g.id === selectedGuideId) || guides[0];
+  const activeGuide = guides.find(g => g.id === selectedGuideId) || authenticatedGuide || guides[0];
 
   // Guide Bookings & Earnings
   const guideBookings = bookings.filter(b => b.guideId === activeGuide.id);
@@ -99,8 +123,19 @@ export const LocalGuidePortal: React.FC<LocalGuidePortalProps> = ({
             className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Join Guide Guild</span>
+            <span>Register Another Guide</span>
           </button>
+
+          {onGuideLogout && (
+            <button
+              type="button"
+              onClick={onGuideLogout}
+              className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5 text-red-600" />
+              <span>Sign Out Guide</span>
+            </button>
+          )}
         </div>
       </div>
 

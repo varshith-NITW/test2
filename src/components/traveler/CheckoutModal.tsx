@@ -131,6 +131,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         splitBreakdown: split,
         status: 'confirmed',
         createdAt: new Date().toISOString(),
+        touristSpotName: hotel.name,
         meetingPointInfo: includeGuide && selectedGuide 
           ? `Hotel Lobby Concierge Desk at ${hotel.name} (09:30 AM)`
           : undefined

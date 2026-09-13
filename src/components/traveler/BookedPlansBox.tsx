@@ -109,9 +109,9 @@ export const BookedPlansBox: React.FC<BookedPlansBoxProps> = ({
                         {booking.id}
                       </span>
                       <span className="text-slate-400">•</span>
-                      <span className="font-extrabold text-sm text-slate-900 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                        {booking.touristSpotName || 'Destination Experience'}
+                      <span className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                        <Hotel className="w-3.5 h-3.5 text-indigo-600" />
+                        {booking.hotelName}
                       </span>
                       <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
@@ -307,10 +307,10 @@ export const BookedPlansBox: React.FC<BookedPlansBoxProps> = ({
                     TravelAI Official Ticket
                   </span>
                   <h4 className="text-lg font-black text-white">
-                    {selectedPassBooking.touristSpotName || 'Authentic Destination Pass'}
+                    {selectedPassBooking.hotelName}
                   </h4>
                   <span className="text-xs text-slate-400">
-                    {selectedPassBooking.hotelName} &bull; {selectedPassBooking.dates.nights} Nights
+                    {selectedPassBooking.roomTypeName} &bull; {selectedPassBooking.dates.nights} Nights Stay
                   </span>
                 </div>
                 <div className="w-14 h-14 bg-white p-1 rounded-xl flex items-center justify-center shrink-0">

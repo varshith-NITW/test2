@@ -58,6 +58,40 @@ export function App() {
     }
   };
 
+  // Local Guide Authentication State (locks Guide Portal until signed in with Tourism Dept ID)
+  const [authenticatedGuide, setAuthenticatedGuide] = useState<Guide | null>(() => {
+    try {
+      const saved = localStorage.getItem('travelai_auth_guide');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleGuideLogin = (guide: Guide) => {
+    setAuthenticatedGuide(guide);
+    try {
+      localStorage.setItem('travelai_auth_guide', JSON.stringify(guide));
+    } catch (e) {
+      console.error(e);
+    }
+    setGuides((prev) => {
+      if (prev.some((g) => g.id === guide.id)) {
+        return prev.map((g) => (g.id === guide.id ? guide : g));
+      }
+      return [guide, ...prev];
+    });
+  };
+
+  const handleGuideLogout = () => {
+    setAuthenticatedGuide(null);
+    try {
+      localStorage.removeItem('travelai_auth_guide');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Load Google Maps API script on application mount
   useEffect(() => {
     loadGoogleMapsScript().catch((e) => {
@@ -131,7 +165,7 @@ export function App() {
       status: 'confirmed',
       createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
       meetingPointInfo: 'Hotel Concierge Desk at 09:30 AM',
-      touristSpotName: 'Charminar & Old City Bazaars'
+      touristSpotName: INITIAL_HOTELS[0].name
     }
   ]);
 
@@ -237,6 +271,8 @@ export function App() {
         }}
         authenticatedHotel={authenticatedHotel}
         onHotelSignOut={handleHotelLogout}
+        authenticatedGuide={authenticatedGuide}
+        onGuideSignOut={handleGuideLogout}
       />
 
       {/* Main Persona View Container */}
@@ -276,6 +312,9 @@ export function App() {
             bookings={bookings}
             onUpdateGuidePackages={() => {}}
             onRegisterNewGuide={handleRegisterNewGuide}
+            authenticatedGuide={authenticatedGuide}
+            onGuideLogin={handleGuideLogin}
+            onGuideLogout={handleGuideLogout}
           />
         )}
 

@@ -127,6 +127,11 @@ export interface Guide {
   badgeVerified: boolean;
   phone: string;
   distanceKm?: number;
+  // Local Guide Authentication & Credentials
+  email?: string;
+  password?: string;
+  location?: string;
+  tourismDeptId?: string;
 }
 
 export interface HotelGuidePartnership {
