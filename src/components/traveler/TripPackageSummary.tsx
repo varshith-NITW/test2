@@ -60,6 +60,13 @@ export const TripPackageSummary: React.FC<TripPackageSummaryProps> = ({
   const [enableMaxDiscount, setEnableMaxDiscount] = useState<boolean>(true);
   const [appliedPromo, setAppliedPromo] = useState<string>('AFFORDABLEINDIA');
 
+  // Ensure scroll is positioned at the top of the page when Step 3 opens
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.body.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, []);
+
   // Calculate live multi-party split breakdown with Maximum Affordability Engine
   const split: SplitBreakdown = calculateSplitBreakdown({
     hotel,

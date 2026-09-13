@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   TouristSpot, 
   Hotel, 
@@ -170,8 +170,40 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
     }
   };
 
+  const topAnchorRef = useRef<HTMLDivElement>(null);
+
+  const scrollToPageTop = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.body.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    if (topAnchorRef.current) {
+      topAnchorRef.current.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' });
+    }
+  };
+
+  const handleStepTransition = (step: StepLayer) => {
+    setCurrentStep(step);
+    scrollToPageTop();
+  };
+
+  // Automatically scroll to top of page whenever active step changes
+  useEffect(() => {
+    scrollToPageTop();
+    const frameId = requestAnimationFrame(() => {
+      scrollToPageTop();
+    });
+    const timer = setTimeout(() => {
+      scrollToPageTop();
+    }, 50);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timer);
+    };
+  }, [currentStep]);
+
   return (
-    <div className="space-y-8 pb-16">
+    <div ref={topAnchorRef} className="space-y-8 pb-16">
       
       {/* 4-Step Layer Wizard */}
       <StepWizard
@@ -180,7 +212,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           if (step === 'step4_payment') {
             setShowRazorpayModal(true);
           } else {
-            setCurrentStep(step);
+            handleStepTransition(step);
           }
         }}
         hasSpotSelected={!!selectedSpot}
@@ -197,7 +229,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           onAiPromptChange={handleAiPromptChange}
           onGeminiResultChange={handleGeminiResultChange}
           onSelectSpot={handleSelectSpot}
-          onProceedToProximity={() => setCurrentStep('step2_proximity')}
+          onProceedToProximity={() => handleStepTransition('step2_proximity')}
           onAddHospitalityInventory={handleAddHospitalityInventory}
         />
       )}
@@ -218,8 +250,8 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           onSelectHotel={handleSelectHotel}
           onToggleRestaurantPass={handleToggleRestaurantPass}
           onToggleGuide={handleToggleGuide}
-          onBackToSpots={() => setCurrentStep('step1_spots')}
-          onProceedToSummary={() => setCurrentStep('step3_summary')}
+          onBackToSpots={() => handleStepTransition('step1_spots')}
+          onProceedToSummary={() => handleStepTransition('step3_summary')}
         />
       )}
 
@@ -234,7 +266,7 @@ export const TravelerHome: React.FC<TravelerHomeProps> = ({
           restaurantPass={selectedRestaurantPass}
           guide={selectedGuide}
           guidePackage={selectedGuidePackage}
-          onBackToRadar={() => setCurrentStep('step2_proximity')}
+          onBackToRadar={() => handleStepTransition('step2_proximity')}
           onProceedToRazorpay={(tier, promo) => {
             if (tier) setAffordabilityTier(tier);
             if (promo) setAppliedPromoCode(promo);

@@ -73,6 +73,13 @@ export const ProximityRadarView: React.FC<ProximityRadarViewProps> = ({
   const [radiusKm, setRadiusKm] = useState<number>(6.0);
   const [activeCategory, setActiveCategory] = useState<'all' | 'hotels' | 'restaurants' | 'guides'>('all');
 
+  // Ensure scroll is positioned at the top of the page when Step 2 opens
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.body.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, []);
+
   // Dynamic fallback inventory ensures properties are always guaranteed for this destination
   const dynamicFallback = useMemo(() => {
     return generateProximityInventoryForSpot(selectedSpot);
